@@ -24,10 +24,9 @@ Da terminale digitare:
 
 Oltre a python, si richiede l'installazione dei seguenti moduli: 
 
-* numpy 
-* scipy
-* matplotlib
-* networkx
+* numpy & scipy http://numpy.scipy.org/
+* matplotlib http://matplotlib.sourceforge.net/
+* networkx http://networkx.lanl.gov/
 
 
 
