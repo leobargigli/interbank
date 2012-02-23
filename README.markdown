@@ -26,7 +26,7 @@ Oltre a python, si richiede l'installazione dei seguenti moduli:
 
 * numpy & scipy http://numpy.scipy.org/
 * matplotlib http://matplotlib.sourceforge.net/
-* networkx http://networkx.lanl.gov/
+* networkx http://networkx.lanl.gov/ (almeno la versione 1.6)
 
 
 
