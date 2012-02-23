@@ -1,14 +1,14 @@
 # Istruzioni
 
  1. Copiare i dati da analizzare nella cartella in cui sono stati salvati i file .py. I file di dati devono essere in formato csv.
-    **N.B.** I nomi dei campi devono essere gli stessi del sample già inviato.
+    **N.B.** I nomi dei campi devono essere gli stessi del sample gia' inviato.
  2. Convertire il file .csv in una edgelist.
     
     Da terminale digitare > `python fromcsv.py NOMEFILE.csv`
     
-    **N.B.**
-    1. Usare l'opzione -d o --d per includere solo le transazioni contrassegnate come "domestiche".
-    2. La procedura crea tanti file .edgelist quanti sono i diversi valori nel campo DATA_CONTABILE.
+    **N.B.**:    
+    * Usare l'opzione -d o --d per includere solo le transazioni contrassegnate come "domestiche".    
+    * La procedura crea tanti file .edgelist quanti sono i diversi valori nel campo DATA_CONTABILE.
     Se NON viene utilizzata l'opzione -d, la procedura restituisce un file denominato DATACONT_tot.edgelist
     In caso contrario restituisce un file denominato DATACONT_dom.edgelist
     
