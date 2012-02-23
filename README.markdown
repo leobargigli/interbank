@@ -21,10 +21,11 @@ Da terminale digitare:
 ## Dipendenze
 
 Oltre a python, si richiede l'installazione dei seguenti moduli: 
- * numpy 
- * scipy
- * matplotlib
- * networkx
+
+* numpy 
+* scipy
+* matplotlib
+* networkx
 
 
 
