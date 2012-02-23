@@ -1,8 +1,10 @@
 # Istruzioni
 
- 1. Copiare i dati da analizzare nella cartella in cui sono stati salvati i file .py. I file di dati devono essere in formato csv.
+1. Copiare i dati da analizzare nella cartella in cui sono stati salvati i file .py. I file di dati devono essere in formato csv.
+ 
     **N.B.** I nomi dei campi devono essere gli stessi del sample gia' inviato.
- 2. Convertire il file .csv in una edgelist.
+
+2. Convertire il file .csv in una edgelist.
     
     Da terminale digitare > `python fromcsv.py NOMEFILE.csv`
     
