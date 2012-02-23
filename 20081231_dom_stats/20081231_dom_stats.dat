@@ -1,0 +1,39 @@
+# of nodes: 631
+# of edges: 5122
+Density: 0.012885
+Volume: 403394.068594
+Sum of weights: 806788.137188
+Volume(2): 403394.068594
+Weak components size distribution:
+631
+Average path length: 2.168495
+Average weighted path length: 4.431018
+Out-degree assortativity (p-value): -0.381557 (0.000000)
+In-degree assortativity (p-value): -0.350200 (0.000000)
+Out-weight assortativity (p-value): -0.111401 (0.000000)
+In-weight assortativity (p-value): -0.107526 (0.000000)
+Degree reciprocity: 0.787579
+Weight reciprocity: 0.482311
+Average directed clustering: 0.624253
+Average dir. & weighted clustering: 0.000000
+Average undirected clustering: 0.710819
+Average undir. & weighted clustering: 0.000000
+Kendall tau w_out / d_out vs d_out (p-value): 0.123033 (0.000007)
+Kendall tau w_in / d_in vs d_in (p-value): 0.146967 (0.000000)
+Kendall tau w / d vs d (p-value): 0.173511 (0.000000)
+
+estimated exponent of out-weight distribution: 1.70
+# datapoints in the tail of out-weight distribution: 420
+min out-weight value in the tail: 8.94
+estimated exponent of cells distribution: 2.09
+# datapoints in the tail of cells distribution: 658
+min cells value in the tail: 23.57
+estimated exponent of in-degree distribution: 2.20
+# datapoints in the tail of in-degree distribution: 424
+min in-degree value in the tail: 3.00
+estimated exponent of in-weight distribution: 1.77
+# datapoints in the tail of in-weight distribution: 351
+min in-weight value in the tail: 14.22
+estimated exponent of out-degree distribution: 1.98
+# datapoints in the tail of out-degree distribution: 134
+min out-degree value in the tail: 6.00
