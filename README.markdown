@@ -18,7 +18,7 @@ Da terminale digitare:
 
  `python interbank_script.py DATACONT_tot(dom).edgelist`
 
-## **DIPENDENZE**
+## Dipendenze
 
 Oltre a python, si richiede l'installazione dei seguenti moduli: 
  * numpy 
