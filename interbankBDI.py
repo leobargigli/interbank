@@ -191,27 +191,26 @@ def reciprocity(G, nbunch = None,  weight = None):
     M = {None: A,True: W}
     
     M = M[weight]
-    L = M.sum()
+    l = M.sum()
 
     F = np.zeros(A.shape)
 
     if nbunch is None:
         n = M.shape[0]
-        a = L / float( ( n - 1 ) *  n )
+        a = l / float( ( n - 1 ) *  n )
     else:
         n = len(nbunch)
         m = len(fnodes)
-        a = L / float( n * ( n - 1 ) + n * m)
-        F[n:, n:] = a
+        a = l / float( n * ( n - 1 ) + n * m)
+        #F[n:, n:] = a
 
-    F[indices] = a * np.ones((len(M), ))
+    #F[indices] = a * np.ones((len(M), ))
     Msq = np.power(M, 2)
     omega = {None: 1., True: Msq.sum() / M.sum()}
 
     rho = np.multiply(M,M.T).sum() / M.sum()
     rho = ( rho - a ) / (omega[weight] - a)
     
-
     #~ E = a * np.ones(A.shape)
     #~ M = M - E + F 
     #~ Msq = np.power(M, 2)
