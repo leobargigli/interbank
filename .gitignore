@@ -2,4 +2,6 @@
 *.py~
 *.edgelist
 *_dom_stat/*
+*.gz
+*.csv
 networkx
