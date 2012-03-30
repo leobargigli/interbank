@@ -1,176 +1,28 @@
-from scipy.stats import binom , kendalltau, pearsonr
+from scipy.stats import binom , kendalltau, pearsonr, norm
+from scipy.stats.mstats import mquantiles
 import networkx as nx
-from scipy.sparse import csc_matrix, extract, linalg, isspmatrix_csc
+from scipy.sparse import csc_matrix, extract, linalg, isspmatrix_csc,dia_matrix
+#from scipy.cluster.hierarchy import linkage,fcluster,distance
+#from sparsesvd import sparsesvd
 import numpy as np
 import pylab as plt
 import os
 
-class Year:
-
-    def __init__(self, filename, delimiter = ','): #delimiter = ','
-        
-        try:
-            edgelist = np.loadtxt(filename) 
-        except ValueError:
-            edgelist = np.loadtxt(filename, delimiter = delimiter) 
-        #empty_rows = np.where(edgelist[:, 2] == 0)[0]
-        #edgelist = np.delete(edgelist,empty_rows,0)
-        #source = np.int32(edgelist[:, 0])
-        #destination = np.int32(edgelist[:, 1])
-        weight = edgelist[:, 2].copy()
-        edgelist = [(str(i[0]),str(i[1]), i[2]) for i in edgelist]
-        self.edgetype = np.dtype([('source','|S10'),('dest','S10'),('weight',np.float64)])
-        edgelist = np.array(edgelist, dtype = self.edgetype)
-        
-        G = nx.DiGraph()
-        G.add_weighted_edges_from(edgelist)
-        self.Graph = G
-        self.Adj = nx.to_scipy_sparse_matrix(G) 
-        filename = os.path.splitext(filename)[0]
-        self.filename = filename
-        self.edgelist = edgelist
-        self.weights = edgelist['weight']
-    
-    def stats(self, nbunch = None):
-        G = self.Graph
-        nodes = G.number_of_nodes()
-        size = G.size(weight = 'weight')
-        if nbunch is not None:
-            nodes = len(nbunch)
-        edges = G.number_of_edges()
-        selfloops = G.selfloop_edges()
-        edges = edges - len(selfloops)
-        density = self.density(nbunch = nbunch)
-        volume = self.Adj.sum()
-        comps = nx.weakly_connected_component_subgraphs(G)
-        comp_size = np.array([i.number_of_nodes() for i in comps], dtype = np.int32)
-    
-        
-        assortativity_out = assortativity(G, x='out', y='out', nbunch = nbunch)
-        assortativity_in = assortativity(G, x='in', y='in', nbunch = nbunch)
-
-        try:
-            w_assortativity_out = assortativity(G, x='out', y='out', weighted = True, nbunch = nbunch)
-            w_assortativity_in = assortativity(G, x='in', y='in', weighted = True, nbunch = nbunch)
-        except TypeError:
-            w_assortativity_out = 'na'
-            w_assortativity_in  = 'na'
-
-        recip = reciprocity(G, nbunch = nbunch)
-        w_recip = reciprocity(G, weight = True, nbunch = nbunch)
-        distG = dists(G, nbunch = nbunch)
-        out_degree = distG['out-degree']
-        out_weight = distG['out-weight']
-        in_degree = distG['in-degree']
-        in_weight = distG['in-weight']
-
-        weight = out_weight + in_weight
-        degree = out_degree + in_degree
-
-        indices = np.where(out_degree == 0.)
-        out_degree = np.delete(out_degree, indices)
-        out_weight = np.delete(out_weight, indices)
-        
-        indices = np.where(in_degree == 0.)
-        in_degree = np.delete(in_degree, indices)
-        in_weight = np.delete(in_weight, indices)
-        
-        indices = np.where(degree == 0.)
-        degree = np.delete(degree, indices)
-        weight = np.delete(weight, indices)
-
-        mean_ow = out_weight / out_degree
-        mean_iw = in_weight / in_degree
-        mean_w = weight / degree
 
 
-        try:
-            out_tau, out_p = kendalltau(mean_ow, out_degree)
-            in_tau, in_p = kendalltau(mean_iw, in_degree)
-            tot_tau, tot_p = kendalltau(mean_w, degree) 
-        except TypeError:
-            out_tau, out_p = (0., 0.)
-            in_tau, in_p = (0., 0.)
-            tot_tau, tot_p = (0., 0.)
-        dC = np.average(clustering_coefficient(G, nbunch = nbunch)[0])
-        dWC = np.average(clustering_coefficient(G, weight = 'weight', nbunch = nbunch)[0])
-
-        uC = np.average(und_clustering_coefficient(G, nbunch = nbunch)[0])
-        uWC = np.average(und_clustering_coefficient(G, weight = 'weight', nbunch = nbunch)[0])
-
-        
-        G.remove_edges_from(selfloops)
-
-        if len(comps) == 1:
-            avg_path_length = nx.average_shortest_path_length(G)
-            try:
-                avg_weight_path_length = nx.average_shortest_path_length(G,weighted = True)
-            except TypeError:
-                avg_weight_path_length = nx.average_shortest_path_length(G,weight = 'weight')
-                
-        else:
-            avg_path_length = nx.average_shortest_path_length(comps[0])
-            try:
-                avg_weight_path_length = nx.average_shortest_path_length(comps[0],weighted = True)
-            except TypeError:
-                avg_weight_path_length = nx.average_shortest_path_length(comps[0],weight = 'weight')
-        
-
-        
-        if nbunch is not None:
-            label = '_adj'
-        else:
-            label = '_unadj'
-        if  self.filename.find('dom') <>-1:
-            label = ''
-        
-        filename = self.filename + label + '_stats.dat'
-        output = open(filename, 'wb')
-        output.write('# of nodes: %i\n'%(nodes)) 
-        output.write('# of edges: %i\n'%(edges)) 
-        output.write('Density: %f\n'%(density)) 
-        output.write('Volume: %f\n'%(volume)) 
-        output.write('Sum of weights: %f\n'%(self.weights.sum())) 
-        output.write('Volume(2): %f\n'%(size) )
-        output.write('Weak components size distribution:\n')
-        np.savetxt(output, comp_size, fmt='%1i')
-        output.write('Average path length: %f\n'%( avg_path_length )) 
-        output.write('Average weighted path length: %f\n'%( avg_weight_path_length )) 
-        output.write('Out-degree assortativity (p-value): %f (%f)\n'%assortativity_out)
-        output.write('In-degree assortativity (p-value): %f (%f)\n'%assortativity_in) 
-        if isinstance(w_assortativity_out, str):
-            output.write('Out-weight assortativity: %s\n'%( w_assortativity_out)) 
-            output.write('In-weight assortativity: %s\n'%( w_assortativity_in)) 
-        else:
-            output.write('Out-weight assortativity (p-value): %f (%f)\n'%w_assortativity_out) 
-            output.write('In-weight assortativity (p-value): %f (%f)\n'%w_assortativity_in) 
-        output.write('Degree reciprocity: %f\n'%(recip)) 
-        output.write('Weight reciprocity: %f\n'%(w_recip))
-        output.write('Average directed clustering: %f\n'%(dC)) 
-        output.write('Average dir. & weighted clustering: %f\n'%(dWC))
-        output.write('Average undirected clustering: %f\n'%(uC)) 
-        output.write('Average undir. & weighted clustering: %f\n'%(uWC))
-        output.write('Kendall tau w_out / d_out vs d_out (p-value): %f (%f)\n' % (out_tau, out_p))
-        output.write('Kendall tau w_in / d_in vs d_in (p-value): %f (%f)\n'% (in_tau, in_p))
-        output.write('Kendall tau w / d vs d (p-value): %f (%f)\n'% (tot_tau, tot_p))
-        
-        output.flush()
-
-    
-    def density(self, nbunch = None):
-        W = self.Adj.todense()
-        A = np.matrix(1. * (W>0))
-        indices = np.diag_indices_from(A)
-        A[indices] = 0.
-        links = A.sum()
-        if nbunch is not None:
-            n = len(nbunch)
-            m = self.Graph.number_of_nodes() - n
-            max_links = n * (n-1) + n * m
-        else:
-            n = self.Graph.number_of_nodes()
-            max_links = n * (n-1)
-        return links / float(max_links)
+def density(G, nbunch = None):
+    A = nx.to_numpy_matrix(G , weight = None)
+    indices = np.diag_indices_from(A)
+    A[indices] = 0.
+    links = A.sum()
+    if nbunch is not None:
+        n = len(nbunch)
+        m = G.number_of_nodes() - n
+        max_links = n * (n-1) + n * m
+    else:
+        n = G.number_of_nodes()
+        max_links = n * (n-1)
+    return links / float(max_links)
                             
 def reciprocity(G, nbunch = None,  weight = None):
     
@@ -238,7 +90,7 @@ def dists(G, nbunch = None):
     dists = {'out-degree': out_degree, 'in-degree': in_degree, 'out-weight': out_weight, 'in-weight': in_weight,  'cells': cells}
     return dists
     
-def scatter(x, y, labels, filename, format='png', diag = False):
+def scatter(x, y, labels, filename, fmt ='png', diag = False):
     xlabel, ylabel, title = labels
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -253,7 +105,7 @@ def scatter(x, y, labels, filename, format='png', diag = False):
         ax.add_line(line)
         ax.set_xlim((0.,1. ))
         ax.set_ylim((0.,1. ))
-    plt.savefig(title+'_'+filename+'.'+format, format = format)
+    plt.savefig(title + '_' + filename + '.' + fmt, fmt = fmt)
     plt.close()
 
 def k_vs_nnk(G, label, nbunch = None):
@@ -294,9 +146,10 @@ def k_vs_nnk(G, label, nbunch = None):
     
     return knnk
 
-def  participation_ratio(G, direction, nbunch = None):
+def  participation_ratio(G, direction, nbunch = None, quant = 50, degree = True):
     
     functions = {'out': G.out_degree, 'in': G.in_degree}
+    
     if nbunch is not None:
         nodes = set(G.nodes())
         fnodes = np.array(list(nodes - set(nbunch)))
@@ -306,7 +159,7 @@ def  participation_ratio(G, direction, nbunch = None):
         nodelist = np.append(nbunch, fnodes)
         n, m = (len(nbunch), len(fnodes))
     else:
-        nodelist = None
+        nodelist = G.nodes()
         nbunch = G.nodes()
         n = len(G)
     
@@ -316,33 +169,86 @@ def  participation_ratio(G, direction, nbunch = None):
     
     if direction == 'in':
         A = A.T
+    
+    # this is the observed participatio ratio
+    
     w = np.asarray(A.sum(1))
-    indices = np.where(w==0)
+    indices = np.where(w == 0)
     w[indices] = 1.
-    w.resize((len(w), ))
-    w = 1/w
-    W = np.asmatrix(np.diag(w))
-    S = W * A
+    w.resize((len(w),))
+    w = 1. / w
+    w = np.asmatrix(np.diag(w))
+    S = w * A
 
     S = np.power(S, 2)
     part_r = np.asarray(S.sum(1))
-    part_r.resize((len(part_r, )))
-    if nbunch is not None:
-        part_r = part_r[:n]
+    part_r.resize((len(part_r),))
+    part_r = part_r[:n]
     
-    dist = functions[direction](nbunch = nbunch)
-    dist = np.array([(i,dist[i]) for i in nbunch],dtype = ([('node','|S10'),('degree',np.float32)]))
-    values = dist['degree']
-    uniquevalues = np.float32(np.unique(values))
-    indices = np.where(uniquevalues == 0)
-    uniquevalues = np.delete(uniquevalues, indices)
-    part_degree = dict()
-    for k in uniquevalues:
-        indices = np.where(values == k)
-        part_k = part_r[indices]
-        part_degree[1/k] = np.average(part_k)
 
-    return part_degree
+    if degree is False:
+
+    #this is the expectation under an expected weight model
+        
+        ew = np.asarray(A.sum(0))
+        ew = np.repeat(ew,n,0)
+        ew =  ew * np.array(A > 0)
+        ewsum = np.array(ew.sum(1))
+        indices = np.where(ewsum == 0)
+        ewsum[indices] = 1.
+        ewsum.resize((len(ewsum),))
+        ewsum = 1. / ewsum
+        ewsum = np.asmatrix(np.diag(ewsum))
+        eS = ewsum * np.asmatrix(ew)
+        
+        eS = np.power(eS, 2)
+        epart_r = np.asarray(eS.sum(1))
+        epart_r.resize((len(epart_r),))
+        epart_r = epart_r[:n]
+
+        bins = np.unique(epart_r)
+        t = len(bins)
+        step = t / quant
+        indices = range(t - 1,0,-step)[::-1]
+        bins = bins[indices]
+        t = len(bins)
+    
+        part_dict = dict()
+
+        for k in range(t - 1): 
+            lower = np.ma.masked_less_equal(epart_r,bins[k + 1])
+            greater = np.ma.masked_greater(epart_r,bins[k])
+            indices = lower.mask * greater.mask
+            indices = np.where(indices > 0)
+            part_k = part_r[indices]
+            part_dict[ bins[k + 1] ] = np.average(part_k)
+
+
+    #this is the uniform expectation: 1 / degree(i)
+
+    else:
+        
+        dist = functions[direction](nbunch = nbunch)
+        dtype = ([('node','|S10'),('degree',np.float32)])
+        epart_r = np.array([(i,dist[i]) for i in nbunch],dtype = dtype)
+        epart_r = epart_r['degree']
+        indices = np.where(epart_r == 0)
+        epart_r = np.delete(epart_r, indices)
+        part_r = np.delete(part_r,indices)
+        epart_r.resize((len(epart_r),))
+        epart_r = 1. / epart_r[:n]
+        bins = np.unique(epart_r)
+
+        part_dict = dict()
+
+        for k in bins: 
+        
+            indices = np.where(epart_r == k)
+            part_k = part_r[indices]
+            part_dict[k] = np.average(part_k)
+
+
+    return part_dict
         
 
 def clust_vs_degree(G, filename, weight = None, nbunch = None,  format = None):
@@ -370,7 +276,7 @@ def clust_vs_degree(G, filename, weight = None, nbunch = None,  format = None):
     plt.close()
 
 
-def clustering_coefficient(G, weight = None, nbunch = None):
+def dir_clustering_coefficient(G, weight = None, nbunch = None):
     
     if nbunch is not None:
         nodes = set(G.nodes())
@@ -411,7 +317,7 @@ def clustering_coefficient(G, weight = None, nbunch = None):
     C = C.tolist()
     return C, degree
      
-def und_clustering_coefficient(G, weight = None,  nbunch = None):
+def clustering_coefficient(G, weight = None,  nbunch = None):
     G = G.to_undirected()
     if nbunch is not None:
         nodes = set(G.nodes())
@@ -485,5 +391,3 @@ def assortativity(G, x='out', y='out', nbunch = None, weighted = False):
     return rho, p
     
      
-
-    
