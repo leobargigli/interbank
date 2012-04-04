@@ -7,6 +7,7 @@ from scipy.sparse import csc_matrix, extract, linalg, isspmatrix_csc,dia_matrix
 import numpy as np
 import pylab as plt
 import os
+from math import ceil
 
 
 
@@ -73,21 +74,55 @@ def reciprocity(G, nbunch = None,  weight = None):
     return rho
 
 def dists(G, nbunch = None):
+    
+    G = G.copy()
+    
+    if nbunch is None:
+        nbunch = G.nodes()
+    
     try:
-        out_degree = np.asarray(G.out_degree(nbunch = nbunch).values(), dtype = np.float32)
-        in_degree = np.asarray(G.in_degree(nbunch = nbunch).values(), dtype = np.float32)
-        out_weight = np.asarray(G.out_degree(weighted = True, nbunch = nbunch).values(), dtype = np.float32)
-        in_weight = np.asarray(G.in_degree(weighted = True, nbunch = nbunch).values(), dtype = np.float32)
-    except TypeError:
-        out_degree = np.asarray(G.out_degree(nbunch = nbunch).values(), dtype = np.float32)
-        in_degree = np.asarray(G.in_degree(nbunch = nbunch).values(), dtype = np.float32)
-        out_weight = np.asarray(G.out_degree(weight = 'weight', nbunch = nbunch).values(), dtype = np.float32)
-        in_weight = np.asarray(G.in_degree(weight = 'weight', nbunch = nbunch).values(), dtype = np.float32)
-        
-    A = nx.to_scipy_sparse_matrix(G)
-    i, j, cells = extract.find(A)
+        out_degree = G.out_degree(nbunch = nbunch)
+        in_degree = G.in_degree(nbunch = nbunch)
+        gross_out_weight = G.out_degree(weighted = True, nbunch = nbunch)
+        gross_in_weight = G.in_degree(weighted = True, nbunch = nbunch)
 
-    dists = {'out-degree': out_degree, 'in-degree': in_degree, 'out-weight': out_weight, 'in-weight': in_weight,  'cells': cells}
+    except TypeError:
+        out_degree = G.out_degree(nbunch = nbunch)
+        in_degree = G.in_degree(nbunch = nbunch)
+        gross_out_weight = G.out_degree(weight = 'weight', nbunch = nbunch)
+        gross_in_weight = G.in_degree(weight = 'weight', nbunch = nbunch)
+
+        
+    A = nx.to_scipy_sparse_matrix(G, nodelist = nbunch)
+    i, j, grosscells = extract.find(A)
+
+    selfloops = G.selfloop_edges(data = True)
+    G.remove_edges_from(selfloops)
+    
+    
+    try:
+        net_out_weight = G.out_degree(weighted = True, nbunch = nbunch)
+        net_in_weight = G.in_degree(weighted = True, nbunch = nbunch)
+
+    except TypeError:
+        net_out_weight = G.out_degree(weight = 'weight', nbunch = nbunch)
+        net_in_weight = G.in_degree(weight = 'weight', nbunch = nbunch)
+
+
+    A = nx.to_scipy_sparse_matrix(G, nodelist = nbunch)
+    i, j, netcells = extract.find(A)
+
+    dists = {
+    'out-degree': np.array([out_degree[i] for i in nbunch],dtype = np.float32), 
+    'in-degree': np.array([in_degree[i] for i in nbunch],dtype = np.float32), 
+    'gross out-weight': np.array([gross_out_weight[i] for i in nbunch],dtype = np.float32), 
+    'gross in-weight': np.array([gross_in_weight[i] for i in nbunch],dtype = np.float32),  
+    'net out-weight': np.array([net_out_weight[i] for i in nbunch],dtype = np.float32), 
+    'net in-weight': np.array([net_in_weight[i] for i in nbunch],dtype = np.float32),  
+    'gross cells': grosscells,
+    'net cells': netcells
+    }
+    
     return dists
     
 def scatter(x, y, labels, filename, fmt ='png', diag = False):
@@ -109,10 +144,43 @@ def scatter(x, y, labels, filename, fmt ='png', diag = False):
     plt.close()
 
 def k_vs_nnk(G, label, nbunch = None):
-    functions = {'out-degree': G.out_degree, 'out-weight': G.out_degree,'in-degree': G.in_degree, 'in-weight': G.in_degree}
-    weight = {'out-degree': None, 'out-weight': 'weight','in-degree': None, 'in-weight': 'weight'}
-    weighted = {'out-degree': 0, 'out-weight': 1,'in-degree': 0, 'in-weight': 1}
-    neighbors = {'out-degree':  G.successors, 'out-weight':  G.successors, 'in-weight':  G.predecessors, 'in-degree':  G.predecessors}
+    
+    selfloops = G.selfloop_edges()
+    netG = G.copy()
+    netG.remove_edges_from(selfloops)
+    
+    functions = {
+    'out-degree': G.out_degree,
+     'gross out-weight': G.out_degree,
+     'in-degree': G.in_degree, 
+     'gross in-weight': G.in_degree,
+    'net out-weight': netG.out_degree,
+     'net in-weight': netG.in_degree,
+     }
+    weight = {
+    'out-degree': None,
+     'gross out-weight': 'weight',
+     'in-degree': None, 
+     'gross in-weight': 'weight',
+     'net in-weight': 'weight',
+     'net out-weight': 'weight',
+     }
+    weighted = {
+    'out-degree': 0, 
+    'net out-weight': 1,
+    'gross out-weight': 1,
+    'in-degree': 0, 
+    'net in-weight': 1,
+    'gross in-weight': 1
+    }
+    neighbors = {
+    'out-degree':  G.successors, 
+    'gross out-weight':  G.successors, 
+    'net out-weight':  netG.successors, 
+    'gross in-weight':  G.predecessors, 
+    'net in-weight':  netG.predecessors, 
+    'in-degree':  G.predecessors
+    }
     try:
         dist = functions[label](weight = weight[label])
     except TypeError:
@@ -147,6 +215,7 @@ def k_vs_nnk(G, label, nbunch = None):
     return knnk
 
 def  participation_ratio(G, direction, nbunch = None, quant = 50, degree = True):
+    
     
     functions = {'out': G.out_degree, 'in': G.in_degree}
     
@@ -208,7 +277,7 @@ def  participation_ratio(G, direction, nbunch = None, quant = 50, degree = True)
 
         bins = np.unique(epart_r)
         t = len(bins)
-        step = t / quant
+        step = max( t / quant , 1)
         indices = range(t - 1,0,-step)[::-1]
         bins = bins[indices]
         t = len(bins)
@@ -251,9 +320,15 @@ def  participation_ratio(G, direction, nbunch = None, quant = 50, degree = True)
     return part_dict
         
 
-def clust_vs_degree(G, filename, weight = None, nbunch = None,  format = None):
+def clust_vs_degree(G, filename, weight = None, nbunch = None,  format = None, directed = False):
     if format is None:    format = 'png'
-    C, degree = clustering_coefficient(G, weight = weight, nbunch = nbunch)
+    if directed is False:
+        C, degree = clustering_coefficient(G, weight = weight, nbunch = nbunch)
+    else: 
+        C, degree = dir_clustering_coefficient(G, weight = weight, nbunch = nbunch)
+    
+    dirdict  = {True: 'directed', False: ''}
+    
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(degree, C)
@@ -271,8 +346,8 @@ def clust_vs_degree(G, filename, weight = None, nbunch = None,  format = None):
     if filename.find('dom') <> -1:
         nlabel = ''
     ax.set_xlabel(wlabel[weight])
-    ax.set_title('cluster_vs_'+wlabel[weight])
-    plt.savefig('cluster_vs_'+wlabel[weight]+'_'+filename+nlabel+'.' + format, format = format)
+    ax.set_title(dirdict[directed] + ' cluster vs ' + wlabel[weight])
+    plt.savefig(dirdict[directed] + 'cluster_vs_' + wlabel[weight] + '_' + filename+nlabel+'.' + format, format = format)
     plt.close()
 
 
@@ -318,7 +393,9 @@ def dir_clustering_coefficient(G, weight = None, nbunch = None):
     return C, degree
      
 def clustering_coefficient(G, weight = None,  nbunch = None):
+    
     G = G.to_undirected()
+    
     if nbunch is not None:
         nodes = set(G.nodes())
         fnodes = np.array(list(nodes - set(nbunch)))
@@ -351,6 +428,7 @@ def clustering_coefficient(G, weight = None,  nbunch = None):
 
     C = triangles / Td
     C = C.tolist()
+    
     return C, degree
     
 def node_degree_xy(G, x='out', y='out', nbunch = None,  weighted = False):

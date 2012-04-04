@@ -5,7 +5,7 @@ import sys
 from optparse import OptionParser
 from plfit import plfit
 from plplot import plplot
-
+from basic_stats_funcs import *
 
 
 USAGE = "%prog --n(odes) NODEFILE FILENAME "
@@ -43,7 +43,6 @@ def main():
         os.mkdir(Y.filename  + label + '_stats')
         os.chdir(Y.filename  + label + '_stats')
   
-    Y.stats(nbunch = nodelist)
     G = Y.Net
     if len(args) > 1:
         img = args[-1]
@@ -54,25 +53,41 @@ def main():
     output = open(filename, 'a')
     output.write('\n')
     distG = dists(G, nbunch = nodelist)
-    fmts = {'out-weight': '%.2f', 'in-degree': '%.1i', 'in-weight': '%.2f', 'out-degree':'%.1i', 'cells': '%.2f'}
-   
+
+    Y.stats(distG,nbunch = nodelist)
+
+    fmts = {
+    'gross out-weight': '%.2f', 
+    'net out-weight': '%.2f', 
+    'in-degree': '%.1i', 
+    'gross in-weight': '%.2f', 
+    'net in-weight': '%.2f', 
+    'out-degree':'%.1i', 
+    'gross cells': '%.2f',
+    'net cells': '%.2f'
+     }
+    #print distG
+    
     for i in distG:
         
         x = distG[i]
-        distfile = Y.filename + '_' + i  + label +'.distr'
+
+        
+        distfile = Y.filename + '_' + i + label +'.distr'
         np.savetxt(distfile, x, fmt = fmts[i])
-        if i <>'cells':
+        if i <>'net cells' and i <> 'gross cells':
             knnk = k_vs_nnk(G, i, nbunch = nodelist)
             knnk = knnk.items()
             knnk = np.array(knnk)
             k = knnk[:, 0]
             nnk = knnk[:, 1]
-            labels=[r'$k$',r'$k_{nn}$','Average neighbor %s vs node %s'%(i, i)]
+            labels = [r'$k$',r'$k_{nn}$','Average neighbor %s vs node %s'%(i, i)]
             scatter(k, nnk, labels, Y.filename + label,fmt = img)
 
         indices = np.where(x == 0)
         x = np.delete(x, indices)
         x = list(x)
+        
         try:
             alpha,xmin,ntail = plfit(x)
         except ValueError:
@@ -88,20 +103,25 @@ def main():
     
     options = [('out',True,0),('out',False,50), ('in',True,0),('in',False,50)]
     for i,j,k in options:
-        part_dict = participation_ratio(G, i, nbunch = nodelist, degree = j, quant = k)
-        part_dict = part_dict.items()
-        part_dict = np.array(part_dict)
-        epart = part_dict[:, 0]
-        part = part_dict[:, 1]
-        labeldict = {True: 'inverse degree', False: 'weight'}
-        ydict = {True: r'$1 / k$', False : ''} 
-        labels = [ydict[j],r'Part. ratio',r'Participation ratio vs %s (%s)' % (labeldict[j],i)]
-        scatter(epart, part, labels, Y.filename + label, diag = True,fmt = img)
+        try:
+            part_dict = participation_ratio(G, i, nbunch = nodelist, degree = j, quant = k)
+            part_dict = part_dict.items()
+            part_dict = np.array(part_dict)
+            epart = part_dict[:, 0]
+            part = part_dict[:, 1]
+            labeldict = {True: 'inverse degree', False: 'weight'}
+            ydict = {True: r'$1 / k$', False : ''} 
+            labels = [ydict[j],r'Part. ratio',r'Participation ratio vs %s (%s)' % (labeldict[j],i)]
+            scatter(epart, part, labels, Y.filename + label, diag = True,fmt = img)
+
+        except IndexError:
+            pass
 
             
         
     clust_vs_degree(G, Y.filename, format = img, nbunch = nodelist)
-    clust_vs_degree(G, Y.filename, weight = 'weight', format = img, nbunch = nodelist)
+    #clust_vs_degree(G, Y.filename, weight = 'weight', format = img, nbunch = nodelist)
+    clust_vs_degree(G, Y.filename, format = img, nbunch = nodelist, directed = True)
     
     os.chdir('..')
         

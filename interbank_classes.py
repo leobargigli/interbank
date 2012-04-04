@@ -40,7 +40,7 @@ class Year:
 
 
     
-    def stats(self, nbunch = None):
+    def stats(self, distG,nbunch = None):
         
         G = self.Net
         nodes = G.number_of_nodes()
@@ -68,11 +68,11 @@ class Year:
 
         recip = reciprocity(G, nbunch = nbunch)
         w_recip = reciprocity(G, weight = True, nbunch = nbunch)
-        distG = dists(G, nbunch = nbunch)
+        #~ distG = dists(G, nbunch = nbunch)
         out_degree = distG['out-degree']
-        out_weight = distG['out-weight']
+        out_weight = distG['gross out-weight']
         in_degree = distG['in-degree']
-        in_weight = distG['in-weight']
+        in_weight = distG['gross in-weight']
 
         weight = out_weight + in_weight
         degree = out_degree + in_degree
