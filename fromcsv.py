@@ -3,10 +3,10 @@ import sys
 from optparse import OptionParser
 from numpy import loadtxt
 
-USAGE = "%prog [-d(omestic)] FILENAME"
+USAGE = "%prog [-d(omestic)] [-f(oreign)] FILENAME"
 USE_DESCRIPTION = "The FILENAME file must be a csv file."
 parser = OptionParser( USAGE , description= " " + USE_DESCRIPTION ) 
-parser.set_defaults( verbosity=None )
+parser.set_defaults( verbosity = None )
 
 parser.add_option( "-d" , "--d",
     action = "store_const",
@@ -17,9 +17,9 @@ parser.add_option( "-d" , "--d",
 
 parser.add_option( "-f" , "--f",
     action = "store_const",
-    const = 1, 
+    const = 2, 
     dest ="foreign",
-    help = "Only domestic exposures are included."
+    help = "Only foreign exposures are included."
 )
 
 
@@ -28,9 +28,17 @@ def main():
     ( opts , args ) = parser.parse_args()
     __validate_opts_and_args( opts , args )
     filename = args[0]
-    optdict = {1: 'dom', 2: 'for' , None: 'tot'}
     tablename = os.path.splitext(filename)[0]
     datefile = 'date.csv'
+
+    if not opts.domestic:
+        opts.domestic = 0.
+        
+    if not opts.foreign:
+        opts.foreign = 0.
+
+    optdict = {1: 'dom', 2: 'for' , 0: 'tot'}
+    
     opt = opts.domestic + opts.foreign
     
     command  = 'python querycsv.py -i %s -o %s \'SELECT DATA_CONTABILE from %s GROUP BY DATA_CONTABILE\'' %(filename,datefile, tablename)
@@ -56,17 +64,20 @@ def main():
         output.writelines(lines)
         output.flush()
         
-        edgefile = i + '_'+ optdict [opts.domestic] + '.edgelist'
+        edgefile = i + '_'+ optdict [opt] + '.edgelist'
         output = open(edgefile, 'wb')
-        where = {1: 'WHERE DATA_CONTABILE = "%s" AND location = "domest"'% (i), 
-                 None: 'WHERE DATA_CONTABILE = "%s" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i)} 
-        command  = 'python querycsv.py -i %s -o %s \'SELECT CTP_CAPOGRU,ctp_controp,sum(importo) from %s %s GROUP BY CTP_CAPOGRU,ctp_controp\'' %(filename,edgefile, tablename, where[opts.domestic])
+        where = {
+                1: 'WHERE DATA_CONTABILE = "%s" AND location = "domest"'% (i), 
+                0: 'WHERE DATA_CONTABILE = "%s" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i),
+                2: 'WHERE DATA_CONTABILE = "%s" AND location = "estero" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i)
+                 } 
+        command  = 'python querycsv.py -i %s -o %s \'SELECT CTP_CAPOGRU,ctp_controp,sum(importo) from %s %s GROUP BY CTP_CAPOGRU,ctp_controp\'' % (filename,edgefile, tablename, where[opt])
         os.system(command)
         output = open(edgefile, 'r')
         lines = output.readlines()
         lines.pop(0)
     
-        if opts.domestic is None:
+        if opts.domestic == 0:
 
             command  = 'python querycsv.py -i %s -o %s \'SELECT ctp_controp,CTP_CAPOGRU,sum(importo) from %s WHERE DATA_CONTABILE = "%s" AND NATURA_RAPPORTO LIKE "%%IMPIEGHI%%" GROUP BY ctp_controp,CTP_CAPOGRU\'' %(filename,edgefile, tablename, i)
             os.system(command)
@@ -82,19 +93,7 @@ def main():
         output = open(edgefile, 'wb')
         output.writelines(lines)
         output.flush()
-        
-#        try:
-#                edgelist = loadtxt(edgefile, delimiter =',')
-#        except IOError:
-#                volume = 0.
-#        try:
-#            volume = edgelist[:, 2].sum()
-#        except IndexError:
-#            if len(edgelist) > 0:
-#                volume = edgelist[-1]
-#            else:
-#                volume = 0.
-#        print volume
+
         
     
 
@@ -109,8 +108,9 @@ def __validate_opts_and_args( opts , args ):
         sys.stderr.write( "FILE {0} DOES NOT EXISTS\n".format(args[0]) )
         sys.exit( 1 )
     if opts.domestic and opts.foreign:
-        sys.stderr.write( "choose either the --d or the --f option".format(args[0]) )
-        parter.print_help()
+        sys.stderr.write( "*** choose either the --d or the --f option ***\n\n")
+        parser.print_help()
+        sys.exit( 1 )
 
 if __name__ == "__main__":
     main()
