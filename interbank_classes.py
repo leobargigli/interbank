@@ -18,11 +18,22 @@ class Year:
             edgelist = np.loadtxt(filename) 
         except ValueError:
             edgelist = np.loadtxt(filename, delimiter = delimiter) 
-        weight = edgelist[:, 2].copy()
-        edgelist = [(str(int(i[0])),str(int(i[1])), i[2]) for i in edgelist]
+        weights = edgelist[:, 2].copy()
+        edges = np.array([str(int(i[0])) +'*'+ str(int(i[1])) for i in edgelist])
+        uni_edges = np.unique(edges)
+        q = len(uni_edges)
+        uni_weights = np.zeros((q,))
+        edgelist = list()
+
+        for i in range(q):
+            indices = np.where(edges == uni_edges[i])
+            uni_weight = weights[indices].sum() 
+            source,dest = tuple(uni_edges[i].split('*'))
+            edgelist.append(tuple((source,dest,uni_weight)))
+            
+            
         self.edgetype = np.dtype([('source','|S10'),('dest','S10'),('weight',np.float64)])
-        edgelist = np.array(edgelist, dtype = self.edgetype)
-        
+        edgelist = np.array(edgelist, dtype = self.edgetype)        
         G = nx.DiGraph()
         G.add_weighted_edges_from(edgelist)
         self.Net = G
@@ -44,9 +55,9 @@ class Year:
         
         G = self.Net
         nodes = G.number_of_nodes()
-        size = G.size(weight = 'weight')
         if nbunch is not None:
             nodes = len(nbunch)
+
         edges = G.number_of_edges()
         selfloops = G.selfloop_edges()
         edges = edges - len(selfloops)
@@ -141,8 +152,6 @@ class Year:
         output.write('# of edges: %i\n'%(edges)) 
         output.write('Density: %f\n'%(d)) 
         output.write('Volume: %f\n'%(volume)) 
-        output.write('Sum of weights: %f\n'%(self.weights.sum())) 
-        output.write('Volume(2): %f\n'%(size) )
         output.write('Weak components size distribution:\n')
         np.savetxt(output, comp_size, fmt='%1i')
         output.write('Average path length: %f\n'%( avg_path_length )) 
@@ -180,23 +189,23 @@ class SVnet(Year):
         out_degree = A.sum(1)
         i, j, wij = extract.find(A)
         indices = np.where(wij > 0)
-        eps = wij[indices].min()
+        eps = max(wij[indices].min(),0.1)
         v = A.sum() / eps
         
         nonzero = len(i)
         pij = np.zeros((nonzero, ))
         for h in xrange(nonzero):                      
             pij[h] = out_degree[i[h]] * in_degree[0,j[h]] / v**2
-        P = 1-binom.cdf(wij - 1,v,pij)
-        data = P<= alpha
+        P = 1 - binom.cdf(wij - 1,v,pij)
+        data = P <= alpha
         zero_entries = np.where(data == 0)
         data = np.delete(data, zero_entries)
         i = np.delete(i, zero_entries)
         j = np.delete(j, zero_entries)
         wij = np.delete(wij,zero_entries)
         ij = np.asarray(zip(i,j)).T
-        self.svnet = csc_matrix((data, ij))
-        self.Adj = csc_matrix((wij, ij))
+        self.svnet = csc_matrix((data, ij), shape = (n,m) )
+        self.Adj = csc_matrix((wij, ij), shape = (n,m) )
         self.nodes = Year.nodes
         self.filename = Year.filename
         self.edgetype = Year.edgetype
@@ -250,6 +259,7 @@ class SVnet(Year):
         cluster = cluster[1:] # deletes the header
         cluster = np.array(cluster,dtype='float') - 1 
         os.chdir('..')
+        cluster = {'infomap': cluster}
 
         return cluster
 
@@ -281,18 +291,19 @@ class SVnet(Year):
     
         os.chdir('..')
 
-    def Infomap(self, niter = 10,seed = 345234 , selflink = False): 
+    def Infomap(self, niter = 10,seed = 345234 , selfloops = False): 
 
         selfdict = {True: 'selflink' , False: ''}
         os.chdir('Infomap')
         filename = self.filename.split('.')[0]
         filename = '%s.net' %(filename)
-        command = './infomap %i %s %i %s' % (seed,filename,niter,selfdict[selflink])
+        command = './infomap %i %s %i %s' % (seed,filename,niter,selfdict[selfloops])
         os.system(command)
         os.chdir('..')
 
     def makecover(self, partition):
         svnet = self.svnet
+        label,partition = partition.items()[0]
         M = community_matrix(partition)
         M = makecover(svnet, M)
         M = csc_matrix(M)
@@ -300,8 +311,8 @@ class SVnet(Year):
         nodelist = self.nodes
         cover = np.asarray(zip(nodelist, j),dtype = [('nodes','S10'),('community',np.int)])
         filename = self.filename.split('.')[0]
-        np.savetxt(filename + '.cover', cover, fmt = ['%10s','%10i'])
-        outfile = open(filename +'M' + '.pkl','wb')
+        np.savetxt(filename + '_' + label +'.cover', cover, fmt = ['%10s','%10i'])
+        outfile = open(filename +'M' + '_' + label + '.pkl','wb')
         dump(M,outfile)
         return cover,M
         

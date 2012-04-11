@@ -7,21 +7,31 @@ USAGE = "%prog [-d(omestic)] FILENAME"
 USE_DESCRIPTION = "The FILENAME file must be a csv file."
 parser = OptionParser( USAGE , description= " " + USE_DESCRIPTION ) 
 parser.set_defaults( verbosity=None )
+
 parser.add_option( "-d" , "--d",
-    action="store_const",
-    const= 1, 
-    dest="domestic",
-    help="Only domestic exposures are included."
+    action = "store_const",
+    const = 1, 
+    dest ="domestic",
+    help = "Only domestic exposures are included."
 )
+
+parser.add_option( "-f" , "--f",
+    action = "store_const",
+    const = 1, 
+    dest ="foreign",
+    help = "Only domestic exposures are included."
+)
+
 
 def main():
 
     ( opts , args ) = parser.parse_args()
     __validate_opts_and_args( opts , args )
     filename = args[0]
-    optdict = {1: 'dom', None: 'tot'}
+    optdict = {1: 'dom', 2: 'for' , None: 'tot'}
     tablename = os.path.splitext(filename)[0]
     datefile = 'date.csv'
+    opt = opts.domestic + opts.foreign
     
     command  = 'python querycsv.py -i %s -o %s \'SELECT DATA_CONTABILE from %s GROUP BY DATA_CONTABILE\'' %(filename,datefile, tablename)
     os.system(command)
@@ -31,8 +41,6 @@ def main():
     for i in xrange(len(dates)):
         dates[i] = dates[i].replace('"', '')
         dates[i] = dates[i].replace('\r\n', '')
-
-    optdict = {1: 'dom', None: 'tot'}
 
     for i in dates:
         
@@ -100,6 +108,9 @@ def __validate_opts_and_args( opts , args ):
         parser.print_help()
         sys.stderr.write( "FILE {0} DOES NOT EXISTS\n".format(args[0]) )
         sys.exit( 1 )
+    if opts.domestic and opts.foreign:
+        sys.stderr.write( "choose either the --d or the --f option".format(args[0]) )
+        parter.print_help()
 
 if __name__ == "__main__":
     main()

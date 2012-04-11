@@ -33,6 +33,7 @@ def spectral_partition(W,q,method = 'complete', metric = 'cosine'):
     cluster = fcluster(Z, q, criterion = 'maxclust')
             
     cluster += - 1
+    cluster = {'spectral' : cluster}
 
     return cluster
 
@@ -252,11 +253,11 @@ def plot_community_distr(covers, labels , logx = False, logy = False):
     
     return distr
     
-def community_stats(filename):
+def community_stats(filename,method):
     
     filename = filename.split('.')[0]
     
-    M = filename + 'M.pkl'
+    M = filename + 'M_' + method + '.pkl'
     M = open(M,'r')
     M = load(M).todense()
     svnet = filename + 'SVGraph.pkl'
@@ -289,10 +290,13 @@ def community_stats(filename):
     stats ['average intracommunity discrepancy:'] = inweight/ inlinks
     outweight = D.sum() - inweight
     stats ['average extracommunity discrepancy:'] = outweight/ (totlinks - inlinks)
+    stats ['# of nodes in svnet'] = len(svnet)
+    stats ['# of valid self-links'] = len(svnet.selfloop_edges())
+
 
     stats = stats.items()
     stats = np.array(stats,dtype = [('stat','S50'),('value',np.float32)])
-    np.savetxt(filename + '.comstats',stats,fmt = ['%10s','%10.10f'])
+    np.savetxt(filename +'_'+ method + '.comstats',stats,fmt = ['%10s','%10.10f'])
     return stats
     
     
