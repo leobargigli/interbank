@@ -29,4 +29,4 @@ Oltre a python, si richiede l'installazione dei seguenti moduli:
 * networkx http://networkx.lanl.gov/ (almeno la versione 1.6)
 
 
-
+test per dimostrare a Luigi come funziona
