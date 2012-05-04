@@ -12,7 +12,7 @@ from cPickle import dump
 
 class Year:
 
-    def __init__(self, filename, delimiter = ','): #delimiter = ','
+    def __init__(self, filename, delimiter = ','): 
         
         try:
             edgelist = np.loadtxt(filename) 

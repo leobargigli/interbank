@@ -67,7 +67,7 @@ def main():
         edgefile = i + '_'+ optdict [opt] + '.edgelist'
         output = open(edgefile, 'wb')
         where = {
-                1: 'WHERE DATA_CONTABILE = "%s" AND location = "domest"'% (i), 
+                1: 'WHERE DATA_CONTABILE = "%s" AND location = "domest" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i), 
                 0: 'WHERE DATA_CONTABILE = "%s" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i),
                 2: 'WHERE DATA_CONTABILE = "%s" AND location = "estero" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i)
                  } 
