@@ -37,7 +37,7 @@ def main():
     if not opts.foreign:
         opts.foreign = 0.
 
-    optdict = {1: 'dom', 2: 'for' , 0: 'tot'}
+    optdict = {1: 'dom', 2: 'for' , 3: 'tot'}
     
     opt = opts.domestic + opts.foreign
     
@@ -68,7 +68,7 @@ def main():
         output = open(edgefile, 'wb')
         where = {
                 1: 'WHERE DATA_CONTABILE = "%s" AND location = "domest" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i), 
-                0: 'WHERE DATA_CONTABILE = "%s" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i),
+                3: 'WHERE DATA_CONTABILE = "%s" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i),
                 2: 'WHERE DATA_CONTABILE = "%s" AND location = "estero" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i)
                  } 
         command  = 'python querycsv.py -i %s -o %s \'SELECT CTP_CAPOGRU,ctp_controp,sum(importo) from %s %s GROUP BY CTP_CAPOGRU,ctp_controp\'' % (filename,edgefile, tablename, where[opt])
@@ -79,7 +79,7 @@ def main():
     
         if opts.domestic == 0:
 
-            command  = 'python querycsv.py -i %s -o %s \'SELECT ctp_controp,CTP_CAPOGRU,sum(importo) from %s WHERE DATA_CONTABILE = "%s" AND NATURA_RAPPORTO LIKE "%%IMPIEGHI%%" GROUP BY ctp_controp,CTP_CAPOGRU\'' %(filename,edgefile, tablename, i)
+            command  = 'python querycsv.py -i %s -o %s \'SELECT ctp_controp,CTP_CAPOGRU,sum(importo) from %s WHERE DATA_CONTABILE = "%s" AND location = "estero" AND NATURA_RAPPORTO LIKE "%%IMPIEGHI%%" GROUP BY ctp_controp,CTP_CAPOGRU\'' %(filename,edgefile, tablename, i)
             os.system(command)
             output = open(edgefile, 'r')
             lines2 = output.readlines()
