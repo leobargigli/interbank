@@ -107,10 +107,10 @@ def __validate_opts_and_args( opts , args ):
         parser.print_help()
         sys.stderr.write( "FILE {0} DOES NOT EXISTS\n".format(args[0]) )
         sys.exit( 1 )
-    if opts.domestic and opts.foreign:
-        sys.stderr.write( "*** choose either the --d or the --f option ***\n\n")
-        parser.print_help()
-        sys.exit( 1 )
+  #  if opts.domestic and opts.foreign:
+  #      sys.stderr.write( "*** choose either the --d or the --f option ***\n\n")
+  #      parser.print_help()
+  #      sys.exit( 1 )
 
 if __name__ == "__main__":
     main()

@@ -263,11 +263,17 @@ class SVnet(Year):
 
         return cluster
 
-    def to_pajek(self):
+    def to_pajek(self,selfloops = False):
         
         os.chdir('Infomap')
     
         W = csc_matrix(self.Adj)
+        W = W.todense()
+        if selfloops is False:
+            indices = np.diag_indices_from(W)
+            W[indices] = 0.
+            W = csc_matrix(W)
+        
         row,col,data = extract.find(W)
         n = len(self.nodes)
         nodes = np.array(range(n))

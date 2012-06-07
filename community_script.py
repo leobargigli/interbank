@@ -59,8 +59,8 @@ def main():
 
     if method == 'infomap':
         
-        SV.to_pajek()
-        SV.Infomap(selfloops = selfloops)
+        SV.to_pajek(selfloops = selfloops)
+        SV.Infomap()
         cluster = SV.from_pajek()
         os.chdir(Y.filename + label + selfloopdict[selfloops] +'_comm_detect')
     

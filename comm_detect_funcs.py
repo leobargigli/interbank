@@ -18,10 +18,10 @@ def spectral_partition(W,q,method = 'complete', metric = 'cosine'):
     r = min(n,m)
 
     if n == m:
-        e,v = linalg.eigs(K, r - 2)
+        e,v = linalg.eigen(K, r - 2)
 
     else:
-        u,e,v = linalg.svds(K, r - 1)
+        u,e,v = linalg.svd(K, r - 1)
         v = np.concatenate((u, v.T), 0)
                 
     max_index = e.argmax()
