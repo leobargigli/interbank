@@ -31,12 +31,16 @@ def main():
     tablename = os.path.splitext(filename)[0]
     datefile = 'date.csv'
 
-    if not opts.domestic:
+    if not opts.domestic and opts.foreign:
         opts.domestic = 0.
         
-    if not opts.foreign:
+    if not opts.foreign and opts.domestic:
         opts.foreign = 0.
-
+        
+    if not opts.foreign and not opts.domestic:
+        opts.domestic = 1
+        opts.foreign = 2
+        
     optdict = {1: 'dom', 2: 'for' , 3: 'tot'}
     
     opt = opts.domestic + opts.foreign
@@ -77,7 +81,7 @@ def main():
         lines = output.readlines()
         lines.pop(0)
     
-        if opts.domestic == 0:
+        if opt <> 1:
 
             command  = 'python querycsv.py -i %s -o %s \'SELECT ctp_controp,CTP_CAPOGRU,sum(importo) from %s WHERE DATA_CONTABILE = "%s" AND location = "estero" AND NATURA_RAPPORTO LIKE "%%IMPIEGHI%%" GROUP BY ctp_controp,CTP_CAPOGRU\'' %(filename,edgefile, tablename, i)
             os.system(command)
