@@ -196,11 +196,11 @@ class SVnet(Year):
             pij[h] = out_degree[i[h]] * in_degree[0,j[h]] / v**2
         P = 1 - binom.cdf(wij - 1,v,pij)
         data = P <= alpha
-        zero_entries = np.where(data == 0)
-        data = np.delete(data, zero_entries)
-        i = np.delete(i, zero_entries)
-        j = np.delete(j, zero_entries)
-        wij = np.delete(wij,zero_entries)
+        #zero_entries = np.where(data == 0)
+        data = data * wij#np.delete(data, zero_entries)
+        #i = np.delete(i, zero_entries)
+        #j = np.delete(j, zero_entries)
+        #wij = np.delete(wij,zero_entries)
         ij = np.asarray(zip(i,j)).T
         self.svnet = csc_matrix((data, ij), shape = (n,m) )
         self.Adj = csc_matrix((wij, ij), shape = (n,m) )
