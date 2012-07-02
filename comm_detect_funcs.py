@@ -216,46 +216,55 @@ def extend_community (M, P, pvalue = 0.01):
     return M,pvalue
         
 
-def plot_community_distr(covers, labels , logx = False, logy = False):
+def plot_community_distr(cover, filename = None, logx = False, logy = False,fmt = 'png'):
 
-    if isinstance(covers,list) is False :
-        covers = [ covers ]
+#    if isinstance(covers,list) is False :
+#        covers = [ covers ]
+#
+#    if isinstance(labels,list) is False :
+#        labels = [ labels ]
+#    
+#
+    distr = { 
+    'Community size distr.' : cover.sum(0).T , 
+    'Node part. distr.' : cover.sum(1)
+    } 
 
-    if isinstance(labels,list) is False :
-        labels = [ labels ]
-    
-
-    distr = { 'Community size distr.' : dict(zip(labels,[j.sum(0).T for j in covers])), 'Node part. distr.' : dict(zip(labels,[j.sum(1) for j in covers]))} 
 
     for i in distr:
         
-        data = distr[i]
+        x = distr[i]
         fig = plt.figure()
         ax = fig.add_subplot(111,ylabel='ccdf') 
-        markers = cycle(['o','^','v','d','s','<','>','+','x','1','2','3','4','h','H','p','|','_'])
-        for j in data:
-            x = data[j]
-            n = len(x)
-            bins = np.unique(np.asarray(x))
-            minbin = max ( bins.min() , 1 )
-            bins = np.concatenate(([minbin - 1], bins))
-            h, bins = np.histogram(x, bins)
-            cdf = np.cumsum(h)
-            ccdf = [1-k/float(n) for k in cdf]
-            ax.plot(bins[1:], ccdf,label = str(j) ,marker = markers.next(), ls = 'None', mfc='w')
+        markers = cycle(['o','^','v','d','s','<','>',
+                        '+','x','1','2','3','4','h','H','p','|','_'])
+        n = len(x)
+        bins = np.unique(np.asarray(x))
+        minbin = max ( bins.min() , 1 )
+        bins = np.concatenate(([minbin - 1], bins))
+        h, bins = np.histogram(x, bins)
+        cdf = np.cumsum(h)
+        ccdf = [1-k/float(n) for k in cdf]
+        ax.plot(bins[1:], ccdf,label = i,
+                    marker = markers.next(), ls = 'None', mfc='w')
             
-
+    
         ax.legend(loc = 1, numpoints = 1)
         
         if logx:
             ax.set_xscale('log')
         if logy:
             ax.set_yscale('log')
+    
         xmin, xmax = plt.xlim()
         ax.set_xlim((-0.2, xmax))
         ymin, ymax = plt.ylim()
         ax.set_ylim((ymin, 1.1))
         ax.set_title(str(i))
+        
+        if filename is not None:
+        
+            plt.savefig(filename + '_' + i + fmt , format = fmt )    
     
     return distr
     

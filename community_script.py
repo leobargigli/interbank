@@ -73,14 +73,15 @@ def main():
             
         q, pdiff,p, svs = n_of_modules_markov(W)
         cluster = spectral_partition(W,q)
-        plot_svs(svs,pdiff,q,filename, fmt = fmt)
         os.chdir(Y.filename + label +selfloopdict[selfloops] +'_comm_detect')
+        plot_svs(svs,pdiff,q,filename, fmt = fmt)
     
     cover,M = SV.makecover(cluster)
     Y.saveDigraph()
     SV.edgelist()
     SV.make_Digraph()
     community_stats(filename,method)
+    plot_community_distr(M,filename = filename)
     
     
     os.chdir('..')
