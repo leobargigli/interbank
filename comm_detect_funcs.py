@@ -1,13 +1,12 @@
-from scipy.stats import binom , kendalltau, pearsonr, norm
+from scipy.stats import binom, norm
 import networkx as nx
-from scipy.sparse import csc_matrix, extract, linalg, isspmatrix_csc,dia_matrix
+from scipy.sparse import csc_matrix, linalg, dia_matrix
 from scipy.cluster.hierarchy import linkage,fcluster,distance
 from itertools import cycle
 from cPickle import load
 #from sparsesvd import sparsesvd
 import numpy as np
 import pylab as plt
-import os
 
     
      
@@ -18,10 +17,17 @@ def spectral_partition(W,q,method = 'complete', metric = 'cosine'):
     r = min(n,m)
 
     if n == m:
-        e,v = linalg.eigen(K, r - 2)
+        try:
+            e,v = linalg.eigen(K, r - 2)
+        except TypeError:
+            e,v = linalg.eigs(K, r - 2)
 
     else:
-        u,e,v = linalg.svd(K, r - 1)
+        try:
+            u,e,v = linalg.svds(K, r - 1)
+        except AttributeError:
+            u,e,v = linalg.svd(K, r - 1)
+           
         v = np.concatenate((u, v.T), 0)
                 
     max_index = e.argmax()
@@ -149,7 +155,7 @@ def Kmatrix(W):
 def community_matrix(cluster):
 
     n = len(cluster)
-    cluster.resize((n, 1))
+    cluster = np.resize(cluster,(n, 1))
     clu_unique = np.unique(cluster)
     c = len(clu_unique)
     clu_unique.resize((c,1))
@@ -271,6 +277,8 @@ def community_stats(filename,method):
     
     stats = dict()
     
+    n_of_modules = M.shape[1]
+    stats['# of communities'] = n_of_modules
     comps = nx.weakly_connected_components(svnet)
     stats ['svnet: largest connected component:'] = len(comps[0])
     inlinks = ( np.multiply( (M * M.T) > 0, W > 0 ) ).sum() 
@@ -292,6 +300,10 @@ def community_stats(filename,method):
     stats ['average extracommunity discrepancy:'] = outweight/ (totlinks - inlinks)
     stats ['# of nodes in svnet'] = len(svnet)
     stats ['# of valid self-links'] = len(svnet.selfloop_edges())
+    indices = np.diag_indices_from(D)
+    indices = np.where(D[indices] < 0)
+    stats ['# of modules with negative discrepancy'] = len(indices[1].T)
+    
 
 
     stats = stats.items()
@@ -354,3 +366,63 @@ def Ematrix(M):
     return E
 
 
+def nmi(cluster1,cluster2):
+
+    Mc = community_matrix(cluster1)
+    M = community_matrix(cluster2)
+    n = len(M)
+    eps = 1.e-10
+    Pc = np.asarray(Mc.sum(0)/n)
+    Pl = np.asarray(M.sum(0)/n)
+    Pl.resize((M.shape[1],))
+    Pc.resize((Pc.shape[1],))
+
+    Hc = - np.dot(Pc,np.log2(Pc + eps))
+    Hl = - np.dot(Pl,np.log2(Pl + eps))
+
+    Pj = M.T * Mc / n
+    Hj = - np.multiply(Pj,np.log2(Pj + eps)).sum()
+    MI = Hc + Hl - Hj
+    nMI = np.sqrt(abs((MI/Hc)*(MI/Hl)))
+
+    return nMI
+
+
+def nmicover(cluster1,cluster2):
+
+    M1 = community_matrix(cluster1)
+    M2 = community_matrix(cluster2)
+    n = len(M1)
+
+    M = M1.T * M2# this is the joint frequency matrix
+
+    Px = M1.sum(0)/n
+    Py = M2.sum(0)/n
+    P11 = M / n # this is P(1,1)
+    P10 = Px.T - P11
+    P01 = Py - P11
+    P00 = 1 - (P11 + P10 + P01)
+
+    eps = 1.e-6
+    h11 = - np.multiply(P11,np.log2(P11 + eps))
+    h10 = - np.multiply(P10,np.log2(P10 + eps))
+    h01 = - np.multiply(P01,np.log2(P01 + eps))
+    h00 = - np.multiply(P00,np.log2(P00 + eps))
+
+    Hy = - (np.multiply(Py,np.log2(Py + eps)) + np.multiply(1 - Py,np.log2(1 - Py + eps)))
+    Hx = - (np.multiply(Px,np.log2(Px + eps)) + np.multiply(1 - Px,np.log2(1 - Px + eps)))
+
+    Hj = h11 + h10 + h01 + h00
+    cond = h11 + h00 > h01 + h10
+    Hj =  np.multiply(cond, Hj) + np.multiply(1 - cond, Hj)
+    Hxcy = Hj - Hy
+    Hycx = Hj - Hx.T
+    Hxcy = Hxcy.min(1).T
+    Hycx = Hycx.min(0)
+    Hnx = Hxcy / Hx
+    Hny = Hycx / Hy
+    Hnx = Hnx.sum() / len(Hnx.T)
+    Hny = Hny.sum() / len(Hny.T)
+    nMI = 1 - 1/2. * (Hnx + Hny)
+
+    return nMI

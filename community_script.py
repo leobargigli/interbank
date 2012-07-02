@@ -3,8 +3,6 @@ import numpy as np
 import os
 import sys
 from optparse import OptionParser
-from plfit import plfit
-from plplot import plplot
 from interbank_classes import *
 
 
@@ -59,8 +57,8 @@ def main():
 
     if method == 'infomap':
         
-        SV.to_pajek(selfloops = selfloops)
-        SV.Infomap()
+        SV.to_pajek()
+        SV.Infomap(selfloops = selfloops)
         cluster = SV.from_pajek()
         os.chdir(Y.filename + label + selfloopdict[selfloops] +'_comm_detect')
     

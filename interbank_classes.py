@@ -1,10 +1,9 @@
-from scipy.stats import binom , kendalltau, pearsonr, norm
+from scipy.stats import binom , kendalltau
 import networkx as nx
-from scipy.sparse import csc_matrix, extract, linalg, isspmatrix_csc,dia_matrix
-from scipy.cluster.hierarchy import linkage,fcluster,distance
+from scipy.sparse import csc_matrix, extract
+#from scipy.cluster.hierarchy import linkage,fcluster,distance
 #from sparsesvd import sparsesvd
 import numpy as np
-import pylab as plt
 import os
 from comm_detect_funcs import *
 from basic_stats_funcs import *
@@ -12,7 +11,7 @@ from cPickle import dump
 
 class Year:
 
-    def __init__(self, filename, delimiter = ','): 
+    def __init__(self, filename, delimiter = ','): #delimiter = ','
         
         try:
             edgelist = np.loadtxt(filename) 
@@ -22,7 +21,6 @@ class Year:
         edges = np.array([str(int(i[0])) +'*'+ str(int(i[1])) for i in edgelist])
         uni_edges = np.unique(edges)
         q = len(uni_edges)
-        uni_weights = np.zeros((q,))
         edgelist = list()
 
         for i in range(q):
@@ -263,17 +261,11 @@ class SVnet(Year):
 
         return cluster
 
-    def to_pajek(self,selfloops = False):
+    def to_pajek(self):
         
         os.chdir('Infomap')
     
         W = csc_matrix(self.Adj)
-        W = W.todense()
-        if selfloops is False:
-            indices = np.diag_indices_from(W)
-            W[indices] = 0.
-            W = csc_matrix(W)
-        
         row,col,data = extract.find(W)
         n = len(self.nodes)
         nodes = np.array(range(n))
@@ -314,8 +306,7 @@ class SVnet(Year):
         M = makecover(svnet, M)
         M = csc_matrix(M)
         i, j, mij = extract.find(M)
-        nodelist = self.nodes
-        cover = np.asarray(zip(nodelist, j),dtype = [('nodes','S10'),('community',np.int)])
+        cover = np.asarray(zip(i, j),dtype = [('nodes','S10'),('community',np.int)])
         filename = self.filename.split('.')[0]
         np.savetxt(filename + '_' + label +'.cover', cover, fmt = ['%10s','%10i'])
         outfile = open(filename +'M' + '_' + label + '.pkl','wb')
