@@ -102,6 +102,8 @@ def n_of_modules_markov(W):
 
 
 def plot_svs(svs,pdiff,q,filename, loc = (0.6,0.7) ,adj = 0.1, fmt = 'png'):
+    
+    filename = filename.split('.')[0]
 
     eigs = svs ** 2
     ymax = eigs.max()
@@ -245,11 +247,11 @@ def plot_community_distr(cover, filename = None, logx = False, logy = False,fmt 
         h, bins = np.histogram(x, bins)
         cdf = np.cumsum(h)
         ccdf = [1-k/float(n) for k in cdf]
-        ax.plot(bins[1:], ccdf,label = i,
+        ax.plot(bins[1:], ccdf,
                     marker = markers.next(), ls = 'None', mfc='w')
             
     
-        ax.legend(loc = 1, numpoints = 1)
+        #ax.legend(loc = 1, numpoints = 1)
         
         if logx:
             ax.set_xscale('log')
@@ -263,7 +265,7 @@ def plot_community_distr(cover, filename = None, logx = False, logy = False,fmt 
         ax.set_title(str(i))
         
         if filename is not None:
-        
+            filename = filename.split('.')[0]
             plt.savefig(filename + '_' + i + fmt , format = fmt )    
     
     return distr
@@ -318,6 +320,7 @@ def community_stats(filename,method):
     stats = stats.items()
     stats = np.array(stats,dtype = [('stat','S50'),('value',np.float32)])
     np.savetxt(filename +'_'+ method + '.comstats',stats,fmt = ['%10s','%10.10f'])
+    
     return stats
     
     
