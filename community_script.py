@@ -81,7 +81,7 @@ def main():
     SV.edgelist()
     SV.make_Digraph()
     community_stats(filename,method)
-    plot_community_distr(M,filename = filename)
+    plot_community_distr(M,filename = method + '_' + filename)
     
     
     os.chdir('..')
