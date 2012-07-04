@@ -35,8 +35,9 @@ class Year:
         G = nx.DiGraph()
         G.add_weighted_edges_from(edgelist)
         self.Net = G
-        self.nodes = np.sort ( G.nodes() )
-        self.Adj = nx.to_scipy_sparse_matrix(G, nodelist = self.nodes , format = 'csc') 
+        self.nodes = list( np.sort ( G.nodes() ))
+        #self.Adj = nx.to_scipy_sparse_matrix(G, nodelist = self.nodes , format = 'csc') 
+        self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
         filename = os.path.splitext(filename)[0]
         self.filename = filename
         self.edgelist = edgelist
@@ -196,11 +197,11 @@ class SVnet(Year):
             pij[h] = out_degree[i[h]] * in_degree[0,j[h]] / v**2
         P = 1 - binom.cdf(wij - 1,v,pij)
         data = P <= alpha
-        #zero_entries = np.where(data == 0)
+        zero_entries = np.where(data == 0)
         data = data * wij#np.delete(data, zero_entries)
-        #i = np.delete(i, zero_entries)
-        #j = np.delete(j, zero_entries)
-        #wij = np.delete(wij,zero_entries)
+        i = np.delete(i, zero_entries)
+        j = np.delete(j, zero_entries)
+        wij = np.delete(wij,zero_entries)
         ij = np.asarray(zip(i,j)).T
         self.svnet = csc_matrix((data, ij), shape = (n,m) )
         self.Adj = csc_matrix((wij, ij), shape = (n,m) )
