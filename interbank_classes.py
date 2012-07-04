@@ -198,7 +198,7 @@ class SVnet(Year):
         P = 1 - binom.cdf(wij - 1,v,pij)
         data = P <= alpha
         zero_entries = np.where(data == 0)
-        data = data * wij#np.delete(data, zero_entries)
+        data = np.delete(data, zero_entries)
         i = np.delete(i, zero_entries)
         j = np.delete(j, zero_entries)
         wij = np.delete(wij,zero_entries)
