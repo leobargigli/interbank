@@ -11,7 +11,7 @@ from cPickle import dump
 
 class Year:
 
-    def __init__(self, filename, delimiter = ','): #delimiter = ','
+    def __init__(self, filename, delimiter = ',',directed = True): #delimiter = ','
         
         try:
             edgelist = np.loadtxt(filename) 
@@ -31,8 +31,11 @@ class Year:
             
             
         self.edgetype = np.dtype([('source','|S10'),('dest','S10'),('weight',np.float64)])
-        edgelist = np.array(edgelist, dtype = self.edgetype)        
-        G = nx.DiGraph()
+        edgelist = np.array(edgelist, dtype = self.edgetype)
+        if directed is True:
+            G = nx.DiGraph()
+        else:
+            G = nx.Graph()
         G.add_weighted_edges_from(edgelist)
         self.Net = G
         self.nodes = list( np.sort ( G.nodes() ))
@@ -300,8 +303,15 @@ class SVnet(Year):
         os.system(command)
         os.chdir('..')
 
-    def makecover(self, partition):
-        svnet = self.svnet
+    def makecover(self, partition,selfloops = False):
+        svnet = self.svnet.todense()
+
+        if selfloops is False:
+            indices = np.diag_indices_from(svnet)
+            svnet[indices] = 0.
+        
+        svnet = csc_matrix(svnet)
+            
         label,partition = partition.items()[0]
         M = community_matrix(partition)
         M = makecover(svnet, M)

@@ -314,7 +314,9 @@ def community_stats(filename,method):
     indices = np.diag_indices_from(D)
     indices = np.where(D[indices] < 0)
     stats ['# of modules with negative discrepancy'] = len(indices[1].T)
-    
+    stats ['# of valid links (sl excl.)'] = len(svnet.edges()) - len(svnet.selfloop_edges())
+    stats ['# of self-links '] = len(net.selfloop_edges())
+    stats ['# of links (sl excl.)'] = len(net.edges()) - len(net.selfloop_edges())
 
 
     stats = stats.items()

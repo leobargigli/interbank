@@ -76,7 +76,11 @@ def main():
         os.chdir(Y.filename + label +selfloopdict[selfloops] +'_comm_detect')
         plot_svs(svs,pdiff,q,filename, fmt = fmt)
     
-    cover,M = SV.makecover(cluster)
+    else:
+        return "method must be spectral or infomap"
+    
+    
+    cover,M = SV.makecover(cluster,selfloops = selfloops)
     Y.saveDigraph()
     SV.edgelist()
     SV.make_Digraph()
