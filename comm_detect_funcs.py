@@ -317,6 +317,9 @@ def community_stats(filename,method):
     stats ['# of valid links (sl excl.)'] = len(svnet.edges()) - len(svnet.selfloop_edges())
     stats ['# of self-links '] = len(net.selfloop_edges())
     stats ['# of links (sl excl.)'] = len(net.edges()) - len(net.selfloop_edges())
+    stats ['volume of the original network'] = net.size(weight = 'weight')
+    stats['volume of the valid network'] = svnet.size(weight = 'weight')
+    
 
 
     stats = stats.items()
