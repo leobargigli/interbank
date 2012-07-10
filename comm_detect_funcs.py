@@ -308,15 +308,18 @@ def community_stats(filename,method,selfloops = False):
     outweight = D.sum() - inweight
     stats ['average extracommunity discrepancy:'] = outweight/ (totlinks - inlinks)
     indices = np.diag_indices_from(D)
+    discr = D[indices]
+    discr = np.resize(discr,(q,1))
+    size = M.T.sum(1)
+    modules = np.append(size,discr,1)
+    np.savetxt(filename +'_'+ method + '.discrepancy',modules)    
     indices = np.where(D[indices] < 0)
     stats ['# of modules with negative discrepancy'] = len(indices[1].T)
-    
-       
     stats = stats.items()
     stats = np.array(stats,dtype = [('stat','S50'),('value',np.float32)])
     np.savetxt(filename +'_'+ method + '.comstats',stats,fmt = ['%10s','%10.10f'])
     
-    np.savetxt(filename +'_'+ method + '.discrepancy',D[indices])
+    
     
     return stats
 
