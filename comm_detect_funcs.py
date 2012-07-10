@@ -319,9 +319,11 @@ def community_stats(filename,method):
     stats ['# of links (sl excl.)'] = len(net.edges()) - len(net.selfloop_edges())
     stats ['volume of the original network'] = net.size(weight = 'weight')
     stats['volume of the valid network'] = svnet.size(weight = 'weight')
+    stats['volume in selfloops (original network)'] = np.trace(W)
+    W = nx.to_numpy_matrix(svnet)
+    stats['volume in selfloops (valid network)'] = np.trace(W)
     
-
-
+       
     stats = stats.items()
     stats = np.array(stats,dtype = [('stat','S50'),('value',np.float32)])
     np.savetxt(filename +'_'+ method + '.comstats',stats,fmt = ['%10s','%10.10f'])
