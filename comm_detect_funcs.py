@@ -177,7 +177,6 @@ def makecover(svnet, M):
         P = prob_node_vs_community(CTC, NTC, M)
         M,pvalue = extend_community(M,P,pvalue = pvalue)
         new = M.sum()
-        print new
     return M
     
   
@@ -288,6 +287,7 @@ def community_stats(filename,method):
     
     stats = dict()
     
+    stats['volume in selfloops (original network)'] = np.trace(W)
     n_of_modules = M.shape[1]
     stats['# of communities'] = n_of_modules
     comps = nx.weakly_connected_components(svnet)
@@ -319,7 +319,6 @@ def community_stats(filename,method):
     stats ['# of links (sl excl.)'] = len(net.edges()) - len(net.selfloop_edges())
     stats ['volume of the original network'] = net.size(weight = 'weight')
     stats['volume of the valid network'] = svnet.size(weight = 'weight')
-    stats['volume in selfloops (original network)'] = np.trace(W)
     W = nx.to_numpy_matrix(svnet)
     stats['volume in selfloops (valid network)'] = np.trace(W)
     
