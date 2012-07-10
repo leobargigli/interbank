@@ -269,34 +269,32 @@ def plot_community_distr(cover, filename = None, logx = False, logy = False,fmt 
     
     return distr
     
-def community_stats(filename,method):
+def community_stats(filename,method,selfloops = False):
     
     filename = filename.split('.')[0]
     
     M = filename + 'M_' + method + '.pkl'
     M = open(M,'r')
     M = load(M).todense()
-    svnet = filename + 'SVGraph.pkl'
-    svnet = open(svnet,'r')
-    svnet = load(svnet)
     net = filename + 'Graph.pkl'
     net = open(net,'r')
     net = load(net)
     
     W = nx.to_numpy_matrix(net)
+
+    if selfloops is False:
+        
+        indices = np.diag_indices_from(W)        
+        W[indices] = 0.
     
     stats = dict()
     
-    stats['volume in selfloops (original network)'] = np.trace(W)
-    n_of_modules = M.shape[1]
-    stats['# of communities'] = n_of_modules
-    comps = nx.weakly_connected_components(svnet)
-    stats ['svnet: largest connected component:'] = len(comps[0])
-    inlinks = ( np.multiply( (M * M.T) > 0, W > 0 ) ).sum() 
+    n,q = M.shape
+    stats['# of communities'] = q
+    inlinks = ( np.multiply( (M * M.T) > 0, W > 0 ) ).sum()
     totlinks = (W > 0).sum()
     stats ['share of intracommunity links:'] = inlinks / float(totlinks)
     multinodes = (M.sum(1)>1).sum()
-    n = float(len(M))
     stats ['share of multicommunity nodes:'] = multinodes / n
     v = W.sum()
     D = M.T * W * M
@@ -309,11 +307,39 @@ def community_stats(filename,method):
     stats ['average intracommunity discrepancy:'] = inweight/ inlinks
     outweight = D.sum() - inweight
     stats ['average extracommunity discrepancy:'] = outweight/ (totlinks - inlinks)
-    stats ['# of nodes in svnet'] = len(svnet)
-    stats ['# of valid self-links'] = len(svnet.selfloop_edges())
     indices = np.diag_indices_from(D)
     indices = np.where(D[indices] < 0)
     stats ['# of modules with negative discrepancy'] = len(indices[1].T)
+    
+       
+    stats = stats.items()
+    stats = np.array(stats,dtype = [('stat','S50'),('value',np.float32)])
+    np.savetxt(filename +'_'+ method + '.comstats',stats,fmt = ['%10s','%10.10f'])
+    
+    np.savetxt(filename +'_'+ method + '.discrepancy',D[indices])
+    
+    return stats
+
+def svnet_stats(filename):
+    
+    filename = filename.split('.')[0]
+    
+    svnet = filename + 'SVGraph.pkl'
+    svnet = open(svnet,'r')
+    svnet = load(svnet)
+    net = filename + 'Graph.pkl'
+    net = open(net,'r')
+    net = load(net)
+    
+    W = nx.to_numpy_matrix(net)
+    
+    stats = dict()
+    
+    stats['volume in selfloops (original network)'] = np.trace(W)
+    comps = nx.weakly_connected_components(svnet)
+    stats ['svnet: largest connected component:'] = len(comps[0])
+    stats ['# of nodes in svnet'] = len(svnet)
+    stats ['# of valid self-links'] = len(svnet.selfloop_edges())
     stats ['# of valid links (sl excl.)'] = len(svnet.edges()) - len(svnet.selfloop_edges())
     stats ['# of self-links '] = len(net.selfloop_edges())
     stats ['# of links (sl excl.)'] = len(net.edges()) - len(net.selfloop_edges())
@@ -321,11 +347,9 @@ def community_stats(filename,method):
     stats['volume of the valid network'] = svnet.size(weight = 'weight')
     W = nx.to_numpy_matrix(svnet)
     stats['volume in selfloops (valid network)'] = np.trace(W)
-    
-       
     stats = stats.items()
     stats = np.array(stats,dtype = [('stat','S50'),('value',np.float32)])
-    np.savetxt(filename +'_'+ method + '.comstats',stats,fmt = ['%10s','%10.10f'])
+    np.savetxt(filename +'.svnetstats',stats,fmt = ['%10s','%10.10f'])
     
     return stats
     

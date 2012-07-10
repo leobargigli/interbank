@@ -45,8 +45,8 @@ def main():
     selfloops = opts.sl
 
     if selfloops is None:
+
         selfloops = False
-    print selfloops
 
     selfloopdict = { 1: '_withselfloops', 0: ''}
     
@@ -84,7 +84,8 @@ def main():
     Y.saveDigraph()
     SV.edgelist()
     SV.make_Digraph()
-    community_stats(filename,method)
+    community_stats(filename,method,selfloops)
+    svnet_stats(filename)
     plot_community_distr(M,filename = method + '_' + filename)
     
     
