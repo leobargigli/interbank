@@ -84,9 +84,9 @@ def main():
         while q > 1:
             cluster = spectral_partition(W,q)
             cover,M = SV.makecover(cluster,selfloops = selfloops,q = q)
-        #plot_svs(svs,pdiff,q,filename, fmt = fmt)
+            #plot_svs(svs,pdiff,q,filename, fmt = fmt)
             community_stats(filename,method,selfloops = selfloops, q = q)
-            plot_community_distr(M,filename = method + '_' + str(q) + '_' + filename)
+            #plot_community_distr(M,filename = method + '_' + str(q) + '_' + filename)
             q += -1
     else:
         return "method must be spectral or infomap"
