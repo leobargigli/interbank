@@ -303,7 +303,7 @@ class SVnet(Year):
         os.system(command)
         os.chdir('..')
 
-    def makecover(self, partition,selfloops = False):
+    def makecover(self, partition,selfloops = False, q = ''):
         svnet = self.svnet.todense()
 
         if selfloops is False:
@@ -319,8 +319,8 @@ class SVnet(Year):
         i, j, mij = extract.find(M)
         cover = np.asarray(zip(i, j),dtype = [('nodes','S10'),('community',np.int)])
         filename = self.filename.split('.')[0]
-        np.savetxt(filename + '_' + label +'.cover', cover, fmt = ['%10s','%10i'])
-        outfile = open(filename +'M' + '_' + label + '.pkl','wb')
+        np.savetxt(filename + '_' + label + '_' + str(q) + '.cover', cover, fmt = ['%10s','%10i'])
+        outfile = open(filename +'M' + '_' + label + '_' + str(q) + '.pkl','wb')
         dump(M,outfile)
         return cover,M
         

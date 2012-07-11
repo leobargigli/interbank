@@ -219,13 +219,6 @@ def extend_community (M, P, pvalue = 0.01):
 
 def plot_community_distr(cover, filename = None, logx = False, logy = False,fmt = 'png'):
 
-#    if isinstance(covers,list) is False :
-#        covers = [ covers ]
-#
-#    if isinstance(labels,list) is False :
-#        labels = [ labels ]
-#    
-#
     distr = { 
     'Community size distr.' : cover.sum(0).T , 
     'Node part. distr.' : cover.sum(1)
@@ -269,11 +262,11 @@ def plot_community_distr(cover, filename = None, logx = False, logy = False,fmt 
     
     return distr
     
-def community_stats(filename,method,selfloops = False):
+def community_stats(filename,method,selfloops = False,q = ''):
     
     filename = filename.split('.')[0]
     
-    M = filename + 'M_' + method + '.pkl'
+    M = filename + 'M_' + method +'_' + str(q) +'.pkl'
     M = open(M,'r')
     M = load(M).todense()
     net = filename + 'Graph.pkl'
@@ -312,14 +305,12 @@ def community_stats(filename,method,selfloops = False):
     discr = np.resize(discr,(q,1))
     size = M.T.sum(1)
     modules = np.append(size,discr,1)
-    np.savetxt(filename +'_'+ method + '.discrepancy',modules)    
+    np.savetxt(filename +'_'+ method +'_' + str(q) + '.discrepancy',modules)    
     indices = np.where(D[indices] < 0)
     stats ['# of modules with negative discrepancy'] = len(indices[1].T)
     stats = stats.items()
     stats = np.array(stats,dtype = [('stat','S50'),('value',np.float32)])
-    np.savetxt(filename +'_'+ method + '.comstats',stats,fmt = ['%10s','%10.10f'])
-    
-    
+    np.savetxt(filename +'_' + method +'_' + str(q) + '.comstats',stats,fmt = ['%10s','%10.10f'])
     
     return stats
 

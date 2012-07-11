@@ -55,12 +55,21 @@ def main():
     except OSError:
         pass
 
+    os.chdir(Y.filename + label +selfloopdict[selfloops] +'_comm_detect')
+
+    Y.saveDigraph()
+    SV.edgelist()
+    SV.make_Digraph()
+    svnet_stats(filename)
+
     if method == 'infomap':
         
         SV.to_pajek()
         SV.Infomap(selfloops = selfloops)
         cluster = SV.from_pajek()
-        os.chdir(Y.filename + label + selfloopdict[selfloops] +'_comm_detect')
+        cover,M = SV.makecover(cluster,selfloops = selfloops)
+        community_stats(filename,method,selfloops)
+        plot_community_distr(M,filename = method + '_' + filename)
     
     elif method == 'spectral':
         
@@ -72,21 +81,17 @@ def main():
             W = csc_matrix(W)
             
         q, pdiff,p, svs = n_of_modules_markov(W)
-        cluster = spectral_partition(W,q)
-        os.chdir(Y.filename + label +selfloopdict[selfloops] +'_comm_detect')
-        plot_svs(svs,pdiff,q,filename, fmt = fmt)
-    
+        while q > 1:
+            cluster = spectral_partition(W,q)
+            cover,M = SV.makecover(cluster,selfloops = selfloops,q = q)
+        #plot_svs(svs,pdiff,q,filename, fmt = fmt)
+            community_stats(filename,method,selfloops = selfloops, q = q)
+            plot_community_distr(M,filename = method + '_' + str(q) + '_' + filename)
+            q += -1
     else:
         return "method must be spectral or infomap"
     
     
-    cover,M = SV.makecover(cluster,selfloops = selfloops)
-    Y.saveDigraph()
-    SV.edgelist()
-    SV.make_Digraph()
-    community_stats(filename,method,selfloops)
-    svnet_stats(filename)
-    plot_community_distr(M,filename = method + '_' + filename)
     
     
     os.chdir('..')
