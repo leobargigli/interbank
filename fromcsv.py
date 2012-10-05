@@ -37,13 +37,13 @@ def main():
     if not opts.foreign and opts.domestic:
         opts.foreign = 0.
         
-    if not opts.foreign and not opts.domestic:
+    else:
         opts.domestic = 1
         opts.foreign = 2
         
     optdict = {1: 'dom', 2: 'for' , 3: 'tot'}
     
-    opt = opts.domestic + opts.foreign
+    opt = opts.domestic + opts.foreign # possible values: 1 (domestic) ; 2 (foreign); 3 (total) 
     
     command  = 'python querycsv.py -i %s -o %s \'SELECT DATA_CONTABILE from %s GROUP BY DATA_CONTABILE\'' %(filename,datefile, tablename)
     os.system(command)

@@ -316,13 +316,13 @@ class SVnet(Year):
         M = community_matrix(partition)
         M = makecover(svnet, M)
         M = csc_matrix(M)
-        i, j, mij = extract.find(M)
-        cover = np.asarray(zip(i, j),dtype = [('nodes','S10'),('community',np.int)])
-        filename = self.filename.split('.')[0]
-        np.savetxt(filename + '_' + label + '_' + str(q) + '.cover', cover, fmt = ['%10s','%10i'])
-        outfile = open(filename +'M' + '_' + label + '_' + str(q) + '.pkl','wb')
-        dump(M,outfile)
-        return cover,M
+        #i, j, mij = extract.find(M)
+        #cover = np.asarray(zip(i, j),dtype = [('nodes','S10'),('community',np.int)])
+        #filename = self.filename.split('.')[0]
+        #np.savetxt(filename + '_' + label + '_' + str(q) + '.cover', cover, fmt = ['%10s','%10i'])
+        #outfile = open(filename +'M' + '_' + label + '_' + str(q) + '.pkl','wb')
+        #dump(M,outfile)
+        return M#cover,M
         
 
 

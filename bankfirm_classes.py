@@ -8,9 +8,9 @@ import pylab as plt
 import os
 from cPickle import load, dump
 from comm_detect_funcs import *
-import interbank_classes as IB
+#import interbank_classes as IB
 
-class Year(IB.Year):
+class Year():#IB.Year):
 
     def __init__(self, filename, delimiter = '\t', dtype = int, divide_factor = 1E0):
 
@@ -25,7 +25,7 @@ class Year(IB.Year):
         self.edgelist = edgelist.copy()
         self.firms = np.unique(edgelist['source'])
         self.banks = np.unique(edgelist['dest'])
-        self.filename = filename
+        self.filename = filename.split('.')[0]
 
         G = nx.DiGraph()
         G.add_nodes_from(self.firms)
@@ -49,18 +49,18 @@ class Year(IB.Year):
         self.Adj = A
         self.descr = 'original network'
         
-    def saveAdj(self):
-        A = self.Adj
-        outfile = open(self.filename.split('.')[0] + 'BiAdj.pkl','wb')
-        dump(A,outfile)
+    def saveDigraph(self):
+        G = self.Adj
+        outfile = open(self.filename.split('.')[0] + 'Graph.pkl','wb')
+        dump(G,outfile)
 
-class SVnet(Year,IB.SVnet):
+class SVnet(Year):#,IB.SVnet):
     
     def __init__(self, Year, pvalue = 0.01):
 
         A =Year.Adj
         v = float(A.sum())
-        
+
         n, m = A.shape
         self.sets = (n, m)
         alpha = pvalue / float(n * m)
@@ -120,77 +120,77 @@ class SVnet(Year,IB.SVnet):
         
         return G
         
-    def makecover(self, partition):
+    def makecover(self, partition, q = '',method = 'spectral'):
         svnet = self.svnet
         svnet = adj_from_biadj(svnet)
         M = community_matrix(partition)
         M = makecover(svnet, M)
         M = csc_matrix(M)
-        i, j, mij = extract.find(M)
-        nodelist = np.append(self.firms,self.banks)
-        cover = np.asarray(zip(nodelist, j),dtype = [('nodes','S10'),('community',np.int)])
-        filename = self.filename.split('.')[0]
-        np.savetxt(filename + '.cover', cover, fmt = ['%10s','%10i'])
-        outfile = open(filename +'M' + '.pkl','wb')
-        dump(M,outfile)
-        return cover,M
+        #i, j, mij = extract.find(M)
+        #nodelist = np.append(self.firms,self.banks)
+        #cover = np.asarray(zip(nodelist, j),dtype = [('nodes','S10'),('community',np.int)])
+        #filename = self.filename.split('.')[0]
+        #np.savetxt(filename +'_' + str(q) + '.cover', cover, fmt = ['%10s','%10i'])
+        #outfile = open(filename +'M_'+ method + '_' + str(q) + '.pkl','wb')
+        #dump(M,outfile)
+        return M
         
         
-def n_of_modules(A):
-
-    K = Kmatrix(A)
-    v = A.sum()
-    n, m = K.shape
-    r = min(n, m)
-    pvalue_diff = np.zeros((r- 2,1))
-    exp_value = (n * m) / float(v)
-    U, svs, V = sparsesvd(K, r-1)
-    eigs = np.power(svs,2)
-    eigs = eigs[1:] # remove the unitary sv
-    sigma = eigs.sum() 
-    pvalue = np.zeros((r- 1,1))
-    pvalue[0] = exp_value/sigma
-
-    for j in xrange(1, r - 1):
-        eigs = eigs[1:] # remove the largest sv
-        sigma = eigs.sum() 
-        pvalue[j]  = min(exp_value / sigma,1.)
-        pvalue_diff[j - 1] = pvalue[j] - pvalue[j-1]
-        #pvalue_old = pvalue_new
-
-    try: 
-        delta  = pvalue_diff.argmax() 
-       
-    except ValueError:
-        delta = -1
+#def n_of_modules(A):
+#
+#    K = Kmatrix(A)
+#    v = A.sum()
+#    n, m = K.shape
+#    r = min(n, m)
+#    pvalue_diff = np.zeros((r- 2,1))
+#    exp_value = (n * m) / float(v)
+#    U, svs, V = sparsesvd(K, r-1)
+#    eigs = np.power(svs,2)
+#    eigs = eigs[1:] # remove the unitary sv
+#    sigma = eigs.sum() 
+#    pvalue = np.zeros((r- 1,1))
+#    pvalue[0] = exp_value/sigma
+#
+#    for j in xrange(1, r - 1):
+#        eigs = eigs[1:] # remove the largest sv
+#        sigma = eigs.sum() 
+#        pvalue[j]  = min(exp_value / sigma,1.)
+#        pvalue_diff[j - 1] = pvalue[j] - pvalue[j-1]
+#        #pvalue_old = pvalue_new
+#
+#    try: 
+#        delta  = pvalue_diff.argmax() 
+#       
+#    except ValueError:
+#        delta = -1
     
     
-    n_of_modules = 2 + delta # the first addend is explained as follows: a) there is at least one module (the component itself) b) python index starts at 0
+ #   n_of_modules = 2 + delta # the first addend is explained as follows: a) there is at least one module (the component itself) b) python index starts at 0
 
-    return n_of_modules,  pvalue_diff, svs
+  #  return n_of_modules,  pvalue_diff, svs
 
-def svnet(A, pvalue = 0.01):
-    v = A.sum()
-    n, m = A.shape
-    alpha = pvalue / (float(n) * float(m))
-    in_degree = A.sum(0)
-    out_degree = A.sum(1)
-    i, j, aij = extract.find(A)
-    nonzero = len(i)
-    pij = np.zeros((nonzero, ))
-    for h in xrange(nonzero):                      
-        pij[h] = (out_degree[i[h]] * in_degree[0,j[h]] )/ v**2
-    P = 1-binom.cdf(aij - 1,v,pij)
-    data = 1.*(P<= alpha)
-    zero_entries = np.where(data == 0) [0]
-    data = np.delete(data, zero_entries)
-    i = np.delete(i, zero_entries)
-    j = np.delete(j, zero_entries)
-    ij = np.asarray(zip(i,j)).T
-    svnet = csc_matrix((data, ij))
-    aij = np.delete(aij, zero_entries)
-    A = csc_matrix((aij, ij))    
-    return A
+#def svnet(A, pvalue = 0.01):
+#    v = A.sum()
+#    n, m = A.shape
+#    alpha = pvalue / (float(n) * float(m))
+#    in_degree = A.sum(0)
+#    out_degree = A.sum(1)
+#    i, j, aij = extract.find(A)
+#    nonzero = len(i)
+#    pij = np.zeros((nonzero, ))
+#    for h in xrange(nonzero):                      
+#        pij[h] = (out_degree[i[h]] * in_degree[0,j[h]] )/ v**2
+#    P = 1-binom.cdf(aij - 1,v,pij)
+#    data = 1.*(P<= alpha)
+#    zero_entries = np.where(data == 0) [0]
+#    data = np.delete(data, zero_entries)
+#    i = np.delete(i, zero_entries)
+#    j = np.delete(j, zero_entries)
+#    ij = np.asarray(zip(i,j)).T
+#    svnet = csc_matrix((data, ij))
+#    aij = np.delete(aij, zero_entries)
+#    A = csc_matrix((aij, ij))    
+#    return A
 
 def adj_from_biadj(A):
     n, m = A.shape

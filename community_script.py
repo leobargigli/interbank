@@ -40,22 +40,19 @@ def main():
     if fmt is None:
         fmt = 'png'
     
-    label = ''
-
     selfloops = opts.sl
 
     if selfloops is None:
-
         selfloops = False
 
     selfloopdict = { 1: '_withselfloops', 0: ''}
     
     try:
-        os.mkdir(Y.filename  + label + selfloopdict[selfloops]+'_comm_detect')
+        os.mkdir(Y.filename  + '_' + selfloopdict[selfloops]+'_comm_detect')
     except OSError:
         pass
 
-    os.chdir(Y.filename + label +selfloopdict[selfloops] +'_comm_detect')
+    os.chdir(Y.filename + '_' + selfloopdict[selfloops] +'_comm_detect')
 
     Y.saveDigraph()
     SV.edgelist()
@@ -67,7 +64,7 @@ def main():
         SV.to_pajek()
         SV.Infomap(selfloops = selfloops)
         cluster = SV.from_pajek()
-        cover,M = SV.makecover(cluster,selfloops = selfloops)
+        M = SV.makecover(cluster,selfloops = selfloops)
         community_stats(filename,method,selfloops)
         plot_community_distr(M,filename = method + '_' + filename)
     
@@ -81,9 +78,10 @@ def main():
             W = csc_matrix(W)
             
         q, pdiff,p, svs = n_of_modules_markov(W)
+        
         while q > 1:
             cluster = spectral_partition(W,q)
-            cover,M = SV.makecover(cluster,selfloops = selfloops,q = q)
+            M = SV.makecover(cluster,selfloops = selfloops,q = q)
             #plot_svs(svs,pdiff,q,filename, fmt = fmt)
             community_stats(filename,method,selfloops = selfloops, q = q)
             #plot_community_distr(M,filename = method + '_' + str(q) + '_' + filename)
