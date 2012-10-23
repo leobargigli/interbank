@@ -114,17 +114,17 @@ def dists(G, nbunch = None):
 
     dists = {
     'out-degree': 
-    np.array([out_degree[i] for i in out_degree.keys()],dtype = np.float32), 
+    np.array([out_degree[i] for i in nbunch],dtype = np.float32), 
     'in-degree': 
-    np.array([in_degree[i] for i in in_degree.keys()],dtype = np.float32), 
+    np.array([in_degree[i] for i in nbunch],dtype = np.float32), 
     'gross out-weight': 
-    np.array([gross_out_weight[i] for i in gross_out_weight.keys()],dtype = np.float32), 
+    np.array([gross_out_weight[i] for i in nbunch],dtype = np.float32), 
     'gross in-weight': 
-    np.array([gross_in_weight[i] for i in gross_in_weight.keys()],dtype = np.float32),  
+    np.array([gross_in_weight[i] for i in nbunch],dtype = np.float32),  
     'net out-weight': 
-    np.array([net_out_weight[i] for i in net_out_weight.keys()],dtype = np.float32), 
+    np.array([net_out_weight[i] for i in nbunch],dtype = np.float32), 
     'net in-weight': 
-    np.array([net_in_weight[i] for i in net_in_weight.keys()],dtype = np.float32),  
+    np.array([net_in_weight[i] for i in nbunch],dtype = np.float32),  
     'gross cells': grosscells,
     'net cells': netcells
     }

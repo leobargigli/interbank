@@ -79,7 +79,6 @@ class Year:
         self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
         self.filename = os.path.splitext(filename)[0]
         self.edgelist = edgelist
-        self.reporters = list(np.unique(edgelist['source']))
 
     def saveDigraph(self):
         G = self.Net
