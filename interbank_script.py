@@ -26,7 +26,9 @@ def main():
     
     
     if opts.nodelist:
-        nodelist = np.loadtxt(opts.nodelist, dtype = str,delimiter = ',')
+        nodelist = np.loadtxt(opts.nodelist, 
+                              dtype = str,
+                              delimiter = ',')
         label = '_adj'
     else:
         nodelist = None
@@ -35,7 +37,8 @@ def main():
     if filename.find('dom') <> -1:
         label = ''
     
-    Y = Year(filename)
+    Y = Year(filename,
+             nodelist = nodelist)
 
     try:
         os.chdir(Y.filename + label +'_stats')
@@ -100,6 +103,10 @@ def main():
 
         except TypeError:
             pass
+        except UnboundLocalError:
+            pass
+        except ValueError:
+            pass
     
     options = [('out',True,0),('out',False,50), ('in',True,0),('in',False,50)]
     for i,j,k in options:
@@ -116,7 +123,8 @@ def main():
 
         except IndexError:
             pass
-
+        except ValueError:
+            pass
             
         
     clust_vs_degree(G, Y.filename, format = img, nbunch = nodelist)

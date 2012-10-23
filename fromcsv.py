@@ -31,13 +31,13 @@ def main():
     tablename = os.path.splitext(filename)[0]
     datefile = 'date.csv'
 
-    if not opts.domestic and opts.foreign:
-        opts.domestic = 0.
+    if opts.domestic is None and opts.foreign is not None:
+        opts.domestic = 0
         
-    if not opts.foreign and opts.domestic:
-        opts.foreign = 0.
+    if opts.foreign is None and opts.domestic is not None:
+        opts.foreign = 0
         
-    else:
+    if opts.foreign is None and opts.domestic is None:
         opts.domestic = 1
         opts.foreign = 2
         
@@ -75,7 +75,7 @@ def main():
                 3: 'WHERE DATA_CONTABILE = "%s" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i),
                 2: 'WHERE DATA_CONTABILE = "%s" AND location = "estero" AND NATURA_RAPPORTO LIKE "%%DEBITI%%"'% (i)
                  } 
-        command  = 'python querycsv.py -i %s -o %s \'SELECT CTP_CAPOGRU,ctp_controp,sum(importo) from %s %s GROUP BY CTP_CAPOGRU,ctp_controp\'' % (filename,edgefile, tablename, where[opt])
+        command  = 'python querycsv.py -i %s -o %s \'SELECT CTP_CAPOGRU,ctp_controp,sum(importo),location from %s %s GROUP BY CTP_CAPOGRU,ctp_controp\'' % (filename,edgefile, tablename, where[opt])
         os.system(command)
         output = open(edgefile, 'r')
         lines = output.readlines()
@@ -83,7 +83,7 @@ def main():
     
         if opt <> 1:
 
-            command  = 'python querycsv.py -i %s -o %s \'SELECT ctp_controp,CTP_CAPOGRU,sum(importo) from %s WHERE DATA_CONTABILE = "%s" AND location = "estero" AND NATURA_RAPPORTO LIKE "%%IMPIEGHI%%" GROUP BY ctp_controp,CTP_CAPOGRU\'' %(filename,edgefile, tablename, i)
+            command  = 'python querycsv.py -i %s -o %s \'SELECT ctp_controp,CTP_CAPOGRU,sum(importo),location from %s WHERE DATA_CONTABILE = "%s" AND location = "estero" AND NATURA_RAPPORTO LIKE "%%IMPIEGHI%%" GROUP BY ctp_controp,CTP_CAPOGRU\'' %(filename,edgefile, tablename, i)
             os.system(command)
             output = open(edgefile, 'r')
             lines2 = output.readlines()

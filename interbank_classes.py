@@ -11,14 +11,43 @@ from cPickle import dump
 
 class Year:
 
-    def __init__(self, filename, delimiter = ',',directed = True): #delimiter = ','
+    def __init__(self, filename, delimiter = ',',directed = True, nodelist = None): #delimiter = ','
+
+        edgetype = np.dtype([('source','|S10'),
+                             ('dest','|S10' ), 
+                             ('weight',np.float64),
+                             ('location','|S10')])
         
         try:
-            edgelist = np.loadtxt(filename) 
-        except ValueError:
-            edgelist = np.loadtxt(filename, delimiter = delimiter) 
-        weights = edgelist[:, 2].copy()
-        edges = np.array([str(int(i[0])) +'*'+ str(int(i[1])) for i in edgelist])
+            edgelist = np.loadtxt(filename,
+                                  dtype = edgetype) 
+        except IndexError:
+            edgelist = np.loadtxt(filename, 
+                                  delimiter = ',',
+                                  dtype = edgetype) 
+
+        if nodelist is not None:
+
+            # this is to clean fake domestic relations
+        
+            reporters = set(nodelist)
+            counterparts = set(np.unique(edgelist['dest']))
+            non_reporters = counterparts.difference(reporters)
+            nr_indices = set(np.where(edgelist['dest'] == non_reporters)[0])
+            dom_indices = set(np.where(edgelist['location'] == 'domest')[0])
+            dom_nr = nr_indices.intersection(dom_indices)
+            edgelist = np.delete(edgelist,list(dom_nr),0)
+            
+            # this is to treat foreign subsidiaries as a separate node
+            
+            selfloops = set(np.where(edgelist['source'] == edgelist['dest'])[0])
+            foreign_links = set(np.where(edgelist['location'] == 'estero')[0])                        
+            foreign_sl = list(selfloops.intersection(foreign_links))
+            for i in foreign_sl:
+                edgelist[i]['dest'] += 'F'
+            
+        weights = edgelist['weight']
+        edges = np.array([i['source'] +'*'+ i['dest'] for i in edgelist])
         uni_edges = np.unique(edges)
         q = len(uni_edges)
         edgelist = list()
@@ -29,22 +58,23 @@ class Year:
             source,dest = tuple(uni_edges[i].split('*'))
             edgelist.append(tuple((source,dest,uni_weight)))
             
-            
-        self.edgetype = np.dtype([('source','|S10'),('dest','S10'),('weight',np.float64)])
+        self.edgetype = np.dtype([('source','|S10'),
+                             ('dest','|S10' ), 
+                             ('weight',np.float64)])
+
         edgelist = np.array(edgelist, dtype = self.edgetype)
+
         if directed is True:
             G = nx.DiGraph()
         else:
             G = nx.Graph()
+            
         G.add_weighted_edges_from(edgelist)
         self.Net = G
-        self.nodes = list( np.sort ( G.nodes() ))
-        #self.Adj = nx.to_scipy_sparse_matrix(G, nodelist = self.nodes , format = 'csc') 
+        self.nodes = list(np.sort(G.nodes()))
         self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
-        filename = os.path.splitext(filename)[0]
-        self.filename = filename
+        self.filename = os.path.splitext(filename)[0]
         self.edgelist = edgelist
-        self.weights = edgelist['weight']
 
     def saveDigraph(self):
         G = self.Net
@@ -56,10 +86,11 @@ class Year:
     def stats(self, distG,nbunch = None):
         
         G = self.Net
-        nodes = G.number_of_nodes()
-        if nbunch is not None:
-            nodes = len(nbunch)
-
+        
+        if nbunch is None:
+            nbunch = G.nodes()
+            
+        nodes = len(nbunch)
         edges = G.number_of_edges()
         selfloops = G.selfloop_edges()
         edges = edges - len(selfloops)
@@ -111,10 +142,16 @@ class Year:
             out_tau, out_p = kendalltau(mean_ow, out_degree)
             in_tau, in_p = kendalltau(mean_iw, in_degree)
             tot_tau, tot_p = kendalltau(mean_w, degree) 
+
         except RuntimeError:
-            out_tau, out_p = (0., 0.)
-            in_tau, in_p = (0., 0.)
-            tot_tau, tot_p = (0., 0.)
+            out_tau, out_p = (None,None)
+            in_tau, in_p = (None, None)
+            tot_tau, tot_p = (None,None)
+
+        except TypeError:
+            out_tau, out_p = (None, None)
+            in_tau, in_p = (None, None)
+            tot_tau, tot_p = (None,None)
     
         dC = np.average(dir_clustering_coefficient(G, nbunch = nbunch)[0])
         dWC = np.average(dir_clustering_coefficient(G, weight = 'weight', nbunch = nbunch)[0])
@@ -172,9 +209,12 @@ class Year:
         output.write('Average dir. & weighted clustering: %f\n'%(dWC))
         output.write('Average undirected clustering: %f\n'%(uC)) 
         output.write('Average undir. & weighted clustering: %f\n'%(uWC))
-        output.write('Kendall tau w_out / d_out vs d_out (p-value): %f (%f)\n' % (out_tau, out_p))
-        output.write('Kendall tau w_in / d_in vs d_in (p-value): %f (%f)\n'% (in_tau, in_p))
-        output.write('Kendall tau w / d vs d (p-value): %f (%f)\n'% (tot_tau, tot_p))
+        if out_tau is not None and out_p is not None:
+            output.write('Kendall tau w_out / d_out vs d_out (p-value): %f (%f)\n' % (out_tau, out_p))
+        if in_tau is not None and in_p is not None:
+            output.write('Kendall tau w_in / d_in vs d_in (p-value): %f (%f)\n'% (in_tau, in_p))
+        if tot_tau is not None and tot_p is not None:
+            output.write('Kendall tau w / d vs d (p-value): %f (%f)\n'% (tot_tau, tot_p))
         
         output.flush()
 
