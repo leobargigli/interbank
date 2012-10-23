@@ -47,6 +47,7 @@ def main():
         os.chdir(Y.filename  + label + '_stats')
   
     G = Y.Net
+    
     if len(args) > 1:
         img = args[-1]
     else:
@@ -55,9 +56,9 @@ def main():
     filename = Y.filename + label + '_stats.dat'
     output = open(filename, 'a')
     output.write('\n')
-    distG = dists(G, nbunch = nodelist)
+    distG = dists(G, nbunch = Y.reporters)
 
-    Y.stats(distG,nbunch = nodelist)
+    Y.stats(distG,nbunch = Y.reporters)
 
     fmts = {
     'gross out-weight': '%.2f', 
@@ -79,7 +80,7 @@ def main():
         distfile = Y.filename + '_' + i + label +'.distr'
         np.savetxt(distfile, x, fmt = fmts[i])
         if i <>'net cells' and i <> 'gross cells':
-            knnk = k_vs_nnk(G, i, nbunch = nodelist)
+            knnk = k_vs_nnk(G, i, nbunch = Y.reporters)
             knnk = knnk.items()
             knnk = np.array(knnk)
             k = knnk[:, 0]
@@ -111,7 +112,7 @@ def main():
     options = [('out',True,0),('out',False,50), ('in',True,0),('in',False,50)]
     for i,j,k in options:
         try:
-            part_dict = participation_ratio(G, i, nbunch = nodelist, degree = j, quant = k)
+            part_dict = participation_ratio(G, i, nbunch = Y.reporters, degree = j, quant = k)
             part_dict = part_dict.items()
             part_dict = np.array(part_dict)
             epart = part_dict[:, 0]
@@ -127,9 +128,9 @@ def main():
             pass
             
         
-    clust_vs_degree(G, Y.filename, format = img, nbunch = nodelist)
+    clust_vs_degree(G, Y.filename, format = img, nbunch = Y.reporters)
     #clust_vs_degree(G, Y.filename, weight = 'weight', format = img, nbunch = nodelist)
-    clust_vs_degree(G, Y.filename, format = img, nbunch = nodelist, directed = True)
+    clust_vs_degree(G, Y.filename, format = img, nbunch = Y.reporters, directed = True)
     
     os.chdir('..')
         

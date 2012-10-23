@@ -42,9 +42,10 @@ class Year:
             
             # this is to treat foreign subsidiaries as a separate node
             
-            foreign_links = np.where(edgelist['location'] == 'estero')[0]                        
+            foreign_links = np.where(edgelist['location'] == 'estero')[0]
+            reporters = np.array(list(reporters))                        
             for i in foreign_links:
-                if (edgelist[i]['dest'] == np.array(list(reporters))).any():
+                if (edgelist[i]['source'] == reporters).any() and (edgelist[i]['dest'] == reporters).any():
                     edgelist[i]['dest'] += 'F'
             
         # this is to sum weights across different link types
@@ -78,6 +79,7 @@ class Year:
         self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
         self.filename = os.path.splitext(filename)[0]
         self.edgelist = edgelist
+        self.reporters = list(np.unique(edgelist['source']))
 
     def saveDigraph(self):
         G = self.Net
