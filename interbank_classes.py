@@ -11,7 +11,7 @@ from cPickle import dump
 
 class Year:
 
-    def __init__(self, filename, delimiter = ',',directed = True, nodelist = None): #delimiter = ','
+    def __init__(self, filename, delimiter = ',',directed = True, nodelist = None):
 
         edgetype = np.dtype([('source','|S10'),
                              ('dest','|S10' ), 
@@ -28,24 +28,26 @@ class Year:
 
         if nodelist is not None:
 
-            # this is to clean fake domestic relations
-        
             reporters = set(nodelist)
             counterparts = set(np.unique(edgelist['dest']))
-            non_reporters = counterparts.difference(reporters)
-            nr_indices = set(np.where(edgelist['dest'] == non_reporters)[0])
+            non_reporters = list(counterparts.difference(reporters))
+
+            # this is to clean fake domestic relations
             dom_indices = set(np.where(edgelist['location'] == 'domest')[0])
-            dom_nr = nr_indices.intersection(dom_indices)
-            edgelist = np.delete(edgelist,list(dom_nr),0)
+            
+            for i in non_reporters:
+                nr_indices = set(np.where(edgelist['dest'] == i)[0])
+                dom_nr = nr_indices.intersection(dom_indices)
+                edgelist = np.delete(edgelist,list(dom_nr),0)
             
             # this is to treat foreign subsidiaries as a separate node
             
-            selfloops = set(np.where(edgelist['source'] == edgelist['dest'])[0])
-            foreign_links = set(np.where(edgelist['location'] == 'estero')[0])                        
-            foreign_sl = list(selfloops.intersection(foreign_links))
-            for i in foreign_sl:
-                edgelist[i]['dest'] += 'F'
+            foreign_links = np.where(edgelist['location'] == 'estero')[0]                        
+            for i in foreign_links:
+                if (edgelist[i]['dest'] == np.array(list(reporters))).any():
+                    edgelist[i]['dest'] += 'F'
             
+        # this is to sum weights across different link types
         weights = edgelist['weight']
         edges = np.array([i['source'] +'*'+ i['dest'] for i in edgelist])
         uni_edges = np.unique(edges)
@@ -57,7 +59,8 @@ class Year:
             uni_weight = weights[indices].sum() 
             source,dest = tuple(uni_edges[i].split('*'))
             edgelist.append(tuple((source,dest,uni_weight)))
-            
+        #
+        
         self.edgetype = np.dtype([('source','|S10'),
                              ('dest','|S10' ), 
                              ('weight',np.float64)])
