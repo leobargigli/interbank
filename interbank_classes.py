@@ -42,11 +42,11 @@ class Year:
             
             # this is to treat foreign subsidiaries as a separate node
             
-            foreign_links = np.where(edgelist['location'] == 'estero')[0]
-            reporters = np.array(list(reporters))                        
-            for i in foreign_links:
-                if (edgelist[i]['source'] == reporters).any() and (edgelist[i]['dest'] == reporters).any():
-                    edgelist[i]['dest'] += 'F'
+#            foreign_links = np.where(edgelist['location'] == 'estero')[0]
+#            reporters = np.array(list(reporters))                        
+#            for i in foreign_links:
+#                if (edgelist[i]['source'] == reporters).any() and (edgelist[i]['dest'] == reporters).any():
+#                    edgelist[i]['dest'] += 'F'
             
         # this is to sum weights across different link types
         weights = edgelist['weight']
