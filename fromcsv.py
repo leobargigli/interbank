@@ -1,7 +1,7 @@
 import os
 import sys
 from optparse import OptionParser
-from numpy import loadtxt
+from numpy import loadtxt,setdiff1d
 
 USAGE = "%prog [-d(omestic)] [-f(oreign)] FILENAME"
 USE_DESCRIPTION = "The FILENAME file must be a csv file."
@@ -62,8 +62,17 @@ def main():
         output = open(reporterfile, 'r')
         lines = output.readlines()
         lines.pop(0)
-        for j in xrange(len(lines)):
-            lines[j] = lines[j].replace('"', '')
+
+#        command  = 'python querycsv.py -i %s -o %s \"SELECT ctp_controp from %s WHERE DATA_CONTABILE = \'%s\' AND location = \'domest\' GROUP BY ctp_controp\"' % (filename , reporterfile , tablename, i)
+#        os.system(command)
+#        output = open(reporterfile, 'r')
+#        lines2 = output.readlines()
+#        lines2.pop(0)
+#        lines2 = list(setdiff1d(lines,lines2))
+#        [lines.append(j) for j in lines2]
+
+        lines = [j.replace('"', '') for j in lines]
+
         output = open(reporterfile, 'wb')
         output.writelines(lines)
         output.flush()

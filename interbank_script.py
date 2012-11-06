@@ -30,6 +30,7 @@ def main():
                               dtype = str,
                               delimiter = ',')
         label = '_adj'
+        
     else:
         nodelist = None
         label = '_unadj'

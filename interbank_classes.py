@@ -15,7 +15,7 @@ class Year:
 
         edgetype = np.dtype([('source','|S10'),
                              ('dest','|S10' ), 
-                             ('weight',np.float64),
+                             ('weight',np.float32),
                              ('location','|S10')])
         
         try:
@@ -26,19 +26,19 @@ class Year:
                                   delimiter = ',',
                                   dtype = edgetype) 
 
-        if nodelist is not None:
+        reporters = np.unique(edgelist['source'])        
+        counterparts = np.unique(edgelist['dest'])
+        non_reporters = np.setdiff1d(counterparts,reporters)
 
-            reporters = set(nodelist)
-            counterparts = set(np.unique(edgelist['dest']))
-            non_reporters = list(counterparts.difference(reporters))
-
-            # this is to clean fake domestic relations
-            dom_indices = set(np.where(edgelist['location'] == 'domest')[0])
+         # this is to clean fake domestic relations
+        
+        dom_indices = np.where(edgelist['location'] == 'domest')[0]
             
-            for i in non_reporters:
-                nr_indices = set(np.where(edgelist['dest'] == i)[0])
-                dom_nr = nr_indices.intersection(dom_indices)
-                edgelist = np.delete(edgelist,list(dom_nr),0)
+        for i in non_reporters:
+            
+            nr_indices = np.where(edgelist['dest'] == i)[0]
+            dom_nr = np.intersect1d(dom_indices,nr_indices)
+            edgelist = np.delete(edgelist,dom_nr,0)
             
             # this is to treat foreign subsidiaries as a separate node
             
@@ -85,8 +85,7 @@ class Year:
         outfile = open(self.filename.split('.')[0] + 'Graph.pkl','wb')
         dump(G,outfile)
 
-
-    
+   
     def stats(self, distG,nbunch = None):
         
         G = self.Net
@@ -210,9 +209,9 @@ class Year:
         output.write('Degree reciprocity: %f\n'%(recip)) 
         output.write('Weight reciprocity: %f\n'%(w_recip))
         output.write('Average directed clustering: %f\n'%(dC)) 
-        output.write('Average dir. & weighted clustering: %f\n'%(dWC))
+        #output.write('Average dir. & weighted clustering: %f\n'%(dWC))
         output.write('Average undirected clustering: %f\n'%(uC)) 
-        output.write('Average undir. & weighted clustering: %f\n'%(uWC))
+        #output.write('Average undir. & weighted clustering: %f\n'%(uWC))
         if out_tau is not None and out_p is not None:
             output.write('Kendall tau w_out / d_out vs d_out (p-value): %f (%f)\n' % (out_tau, out_p))
         if in_tau is not None and in_p is not None:
