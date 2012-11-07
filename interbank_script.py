@@ -41,6 +41,9 @@ def main():
     Y = Year(filename,
              nodelist = nodelist)
 
+    # this is to take account of fake domestic links    
+    nodelist = Y.nodes
+
     try:
         os.chdir(Y.filename + label +'_stats')
     except OSError:

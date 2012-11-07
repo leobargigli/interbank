@@ -11,7 +11,7 @@ from cPickle import dump
 
 class Year:
 
-    def __init__(self, filename, delimiter = ',',directed = True, nodelist = None):
+    def __init__(self, filename, delimiter = ',',nodelist = None):
 
         edgetype = np.dtype([('source','|S10'),
                              ('dest','|S10' ), 
@@ -40,6 +40,7 @@ class Year:
             dom_nr = np.intersect1d(dom_indices,nr_indices)
             edgelist = np.delete(edgelist,dom_nr,0)
             
+            
             # this is to treat foreign subsidiaries as a separate node
             
 #            foreign_links = np.where(edgelist['location'] == 'estero')[0]
@@ -53,29 +54,25 @@ class Year:
         edges = np.array([i['source'] +'*'+ i['dest'] for i in edgelist])
         uni_edges = np.unique(edges)
         q = len(uni_edges)
-        edgelist = list()
+
+        self.edgetype = np.dtype([('source','|S10'),
+                             ('dest','|S10' ), 
+                             ('weight',np.float64)])
+
+        
+        edgelist = np.zeros((q,), dtype = self.edgetype)
 
         for i in range(q):
             indices = np.where(edges == uni_edges[i])
             uni_weight = weights[indices].sum() 
             source,dest = tuple(uni_edges[i].split('*'))
-            edgelist.append(tuple((source,dest,uni_weight)))
-        #
-        
-        self.edgetype = np.dtype([('source','|S10'),
-                             ('dest','|S10' ), 
-                             ('weight',np.float64)])
+            edgelist[i] = (source,dest,uni_weight)
 
-        edgelist = np.array(edgelist, dtype = self.edgetype)
-
-        if directed is True:
-            G = nx.DiGraph()
-        else:
-            G = nx.Graph()
-            
+        G = nx.DiGraph()
         G.add_weighted_edges_from(edgelist)
+
         self.Net = G
-        self.nodes = list(np.sort(G.nodes()))
+        self.nodes = np.array((np.sort(G.nodes())),dtype = str)
         self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
         self.filename = os.path.splitext(filename)[0]
         self.edgelist = edgelist
