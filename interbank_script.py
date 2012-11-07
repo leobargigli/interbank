@@ -22,7 +22,7 @@ def main():
     ( opts , args ) = parser.parse_args()
     __validate_opts_and_args( opts , args )
     filename = args[0]
-    
+
     
     
     if opts.nodelist:
@@ -38,12 +38,13 @@ def main():
     if filename.find('dom') <> -1:
         label = ''
     
-    Y = Year(filename,
-             nodelist = nodelist)
+    Y = Year(filename)
 
-    # this is to take account of fake domestic links    
-    nodelist = Y.nodes
-
+    # this is to clean from fake domestic links    
+    if nodelist is not None:
+        
+        nodelist = np.intersect1d(nodelist,Y.nodes)
+        
     try:
         os.chdir(Y.filename + label +'_stats')
     except OSError:

@@ -11,7 +11,7 @@ from cPickle import dump
 
 class Year:
 
-    def __init__(self, filename, delimiter = ',',nodelist = None):
+    def __init__(self, filename, delimiter = ','):
 
         edgetype = np.dtype([('source','|S10'),
                              ('dest','|S10' ), 
@@ -76,6 +76,8 @@ class Year:
         self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
         self.filename = os.path.splitext(filename)[0]
         self.edgelist = edgelist
+        
+
 
     def saveDigraph(self):
         G = self.Net
@@ -85,6 +87,14 @@ class Year:
    
     def stats(self, distG,nbunch = None):
         
+        if nbunch is not None:
+            label = '_adj'
+        else:
+            label = '_unadj'
+            
+        if  self.filename.find('dom') <>-1:
+            label = ''
+            
         G = self.Net
         
         if nbunch is None:
@@ -177,14 +187,6 @@ class Year:
                 avg_weight_path_length = nx.average_shortest_path_length(comps[0],weight = 'weight')
         
 
-        
-        if nbunch is not None:
-            label = '_adj'
-        else:
-            label = '_unadj'
-        if  self.filename.find('dom') <>-1:
-            label = ''
-        
         filename = self.filename + label + '_stats.dat'
         output = open(filename, 'wb')
         output.write('# of nodes: %i\n'%(nodes)) 
