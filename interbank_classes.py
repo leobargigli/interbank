@@ -101,12 +101,17 @@ class Year:
             nbunch = G.nodes()
             
         nodes = len(nbunch)
-        edges = G.number_of_edges()
-        selfloops = G.selfloop_edges()
+        edges = G.subgraph(nbunch).number_of_edges()
+        selfloops = G.subgraph(nbunch).selfloop_edges()
         edges = edges - len(selfloops)
         d = density(G , nbunch = nbunch)
-        volume = self.Adj.sum()
-        comps = nx.weakly_connected_component_subgraphs(G)
+        
+        try:
+            volume = G.subgraph(nbunch).size(weight = 'weight') #self.Adj.sum()
+        except TypeError:
+            volume = G.subgraph(nbunch).size(weighted = True)
+        
+        comps = nx.weakly_connected_component_subgraphs(G.subgraph(nbunch))
         comp_size = np.array([i.number_of_nodes() for i in comps], dtype = np.int32)
     
         
