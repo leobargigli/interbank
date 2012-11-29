@@ -52,11 +52,11 @@ class Year:
             
             # this is to treat foreign subsidiaries as a separate node
             
-#        foreign_links = np.where(edgelist['location'] == 'estero')[0]
-#        
-#        for i in foreign_links:
-#            if edgelist[i]['source'] == edgelist[i]['dest']:
-#                edgelist[i]['dest'] += 'F'
+        foreign_links = np.where(edgelist['location'] == 'estero')[0]
+        
+        for i in foreign_links:
+            if edgelist[i]['source'] == edgelist[i]['dest']:
+                edgelist[i]['dest'] += 'F'
             
         # this is to sum weights across different link types
         
