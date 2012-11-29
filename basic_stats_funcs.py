@@ -1,4 +1,4 @@
-from scipy.stats import binom , kendalltau, pearsonr, norm
+from scipy.stats import binom , kendalltau, pearsonr, norm, betai
 from scipy.stats.mstats import mquantiles
 import networkx as nx
 from scipy.sparse import csc_matrix, extract, linalg, isspmatrix_csc,dia_matrix
@@ -19,7 +19,7 @@ def density(G, nbunch = None):
     if nbunch is not None:
         n = len(nbunch)
         m = G.number_of_nodes() - n
-        max_links = n * (n-1) + n * m
+        max_links = n * (n - 1 + 2 * m)
     else:
         n = G.number_of_nodes()
         max_links = n * (n-1)
@@ -28,50 +28,45 @@ def density(G, nbunch = None):
 def reciprocity(G, nbunch = None,  weight = None):
     
     if nbunch is not None:
-        nodes = set(G.nodes())
-        fnodes = np.array(list(nodes - set(nbunch)))
-        nbunch = np.array(list(nbunch))
-        np.sort(nbunch)
-        np.sort(fnodes)
+        nodes = np.sort(G.nodes())
+        nbunch = np.sort(nbunch)
+        fnodes = np.setdiff1d(nodes,nbunch)
         nodelist = np.append(nbunch, fnodes)
     else:
-        nodelist = None
+        nbunch = G.nodes()
+        nodelist = G.nodes()
+        fnodes = list()
     
-    W = nx.to_numpy_matrix(G, nodelist = nodelist)
+    W = np.array(nx.to_numpy_matrix(G, nodelist = nodelist))
     indices = np.diag_indices_from(W)
     W[indices] = 0.
-    A = np.matrix(1. * (W > 0))
-    M = {None: A,True: W}
     
-    M = M[weight]
-    l = M.sum()
+    if weight is None:
+        
+        W = 1. * (W > 0)
 
-    F = np.zeros(A.shape)
+    l = float(W.sum())
+    n = len(nbunch)
+    m = len(fnodes)
+    df = n  * (n - 1  + 2 * m)
+    a = l / df # this is to take into account that the maximal number of observable links is lower than (n+m)*(n+m-1)
+    W[n:,n:] = a # this is to set the terms corresponding to unobserved exposures to zero
 
-    if nbunch is None:
-        n = M.shape[0]
-        a = l / float( ( n - 1 ) *  n )
+    l2 = (W**2).sum()
+    omega =  l2 / l
+        
+    rho = (W * W.T).sum() / l
+    rho = (rho - a) / (omega - a)
+    
+    rho = max(min(rho, 1.0), - 1.0)
+
+    if abs(rho) == 1.0:
+        prob = 0.0
     else:
-        n = len(nbunch)
-        m = len(fnodes)
-        a = l / float( n * ( n - 1 ) + n * m)
-        #F[n:, n:] = a
-
-    #F[indices] = a * np.ones((len(M), ))
-    Msq = np.power(M, 2)
-    omega = {None: 1., True: Msq.sum() / M.sum()}
-
-    rho = np.multiply(M,M.T).sum() / M.sum()
-    rho = ( rho - a ) / (omega[weight] - a)
+        t_squared = rho * rho * (df / ((1.0 - rho) * (1.0 + rho)))
+        prob = betai(0.5*df, 0.5, df / (df + t_squared))    
     
-    #~ E = a * np.ones(A.shape)
-    #~ M = M - E + F 
-    #~ Msq = np.power(M, 2)
-    #~ MT = M.T - E + F
-    #~ M = np.multiply(MT, M)
-    #~ rho = M.sum() / Msq.sum()
-#~ 
-    return rho
+    return rho,prob
 
 def dists(G, nbunch = None):
     
@@ -153,7 +148,7 @@ def k_vs_nnk(G, label, nbunch = None):
     
     selfloops = G.selfloop_edges()
     netG = G.copy()
-    netG.remove_edges_from(selfloops)
+    G.remove_edges_from(selfloops)
     
     functions = {
     'out-degree': G.out_degree,
@@ -237,7 +232,7 @@ def  participation_ratio(G, direction, nbunch = None, quant = 50, degree = True)
         nodelist = G.nodes()
         nbunch = G.nodes()
         n = len(G)
-    
+        
     A = nx.to_numpy_matrix(G, nodelist = nodelist)
     indices = np.diag_indices_from(A)
     A[indices] = 0.
@@ -326,12 +321,12 @@ def  participation_ratio(G, direction, nbunch = None, quant = 50, degree = True)
     return part_dict
         
 
-def clust_vs_degree(G, filename, weight = None, nbunch = None,  format = None, directed = False):
+def clust_vs_degree(G, filename, nbunch = None,  format = None, directed = False):
     if format is None:    format = 'png'
     if directed is False:
-        C, degree = clustering_coefficient(G, weight = weight, nbunch = nbunch)
+        C, degree = clustering_coefficient(G, nbunch = nbunch)
     else: 
-        C, degree = dir_clustering_coefficient(G, weight = weight, nbunch = nbunch)
+        C, degree = dir_clustering_coefficient(G, nbunch = nbunch)
     
     dirdict  = {True: 'directed', False: ''}
     
@@ -344,37 +339,37 @@ def clust_vs_degree(G, filename, weight = None, nbunch = None,  format = None, d
     ax.add_line(line)
     ax.set_ylabel('Clustering coefficient')
         
-    wlabel = {None: 'degree', 'weight':'weight'}
+    #wlabel = {None: 'degree', 'weight':'weight'}
     if nbunch is not None:
         nlabel = '_adj'
     else:
         nlabel = '_unadj'
     if filename.find('dom') <> -1:
         nlabel = ''
-    ax.set_xlabel(wlabel[weight])
-    ax.set_title(dirdict[directed] + ' cluster vs ' + wlabel[weight])
-    plt.savefig(dirdict[directed] + 'cluster_vs_' + wlabel[weight] + '_' + filename+nlabel+'.' + format, format = format)
+    ax.set_xlabel('degree')
+    ax.set_title(dirdict[directed] + ' cluster vs degree')
+    plt.savefig(dirdict[directed] + 'cluster_vs_degree' + '_' + filename+nlabel+'.' + format, format = format)
     plt.close()
 
 
 def dir_clustering_coefficient(G, weight = None, nbunch = None):
     
+    G = G.copy()    
+    selfloops = G.selfloop_edges()
+    G.remove_edges_from(selfloops) # exclude selfloops
+    
     if nbunch is not None:
-        nodes = set(G.nodes())
-        fnodes = np.array(list(nodes - set(nbunch)))
-        nbunch = np.array(list(nbunch))
-        np.sort(nbunch)
-        np.sort(fnodes)
+        nodes = np.sort(G.nodes())
+        nbunch = np.sort(nbunch)
+        fnodes = np.setdiff1d(nodes,nbunch)
         nodelist = np.append(nbunch, fnodes)
-        n, m = (len(nbunch), len(fnodes))
+
     else:
-        nodelist = None
         nbunch = G.nodes()
-        n = len(G)
-        
+        nodelist = G.nodes()
+
+    n = len(nbunch)
     W = nx.to_numpy_matrix(G, nodelist = nodelist)
-    indices = np.diag_indices_from(W)
-    W[indices] = 0.
     A  =  np.matrix(1. * (W > 0))
 
     out_degree = G.out_degree(nbunch = nbunch)
@@ -387,55 +382,42 @@ def dir_clustering_coefficient(G, weight = None, nbunch = None):
     indices = np.where(Tmax == 0)
     Tmax[indices] = 1.
     
-    if weight is not None:
-        A = W / W.max()
-
     A = A + A.T
-    triangles = np.diag(A**3)
-    if nbunch is not None:
-        triangles = triangles [:n]
-    C = triangles / Tmax
-    C = C.tolist()
-    return C, degree
+    triangles = np.diag(A**3)[:n]
+    cc = triangles / Tmax
+    cc = cc.tolist()
+    
+    return cc,degree
      
-def clustering_coefficient(G, weight = None,  nbunch = None):
+def clustering_coefficient(G,  nbunch = None):
     
     G = G.to_undirected()
+    selfloops = G.selfloop_edges()
+    G.remove_edges_from(selfloops) # exclude selfloops
     
     if nbunch is not None:
-        nodes = set(G.nodes())
-        fnodes = np.array(list(nodes - set(nbunch)))
-        nbunch = np.array(list(nbunch))
-        np.sort(nbunch)
-        np.sort(fnodes)
+        nodes = np.sort(G.nodes())
+        nbunch = np.sort(nbunch)
+        fnodes = np.setdiff1d(nodes,nbunch)
         nodelist = np.append(nbunch, fnodes)
-        n, m = (len(nbunch), len(fnodes))
+
     else:
-        nodelist = None
         nbunch = G.nodes()
-        n = len(G)
+        nodelist = G.nodes()
         
-        
-    W = nx.to_numpy_matrix(G, nodelist = nodelist)
-    indices = np.diag_indices_from(W)
-    W[indices] = 0.
+    n = len(nbunch)
+    W = nx.to_numpy_matrix(G, nodelist = nodelist) # we take into account all links
     A  =  np.matrix(1. * (W > 0))
     degree = G.degree(nbunch = nbunch)
     degree = np.array([degree[i] for i in nbunch])
     Td = degree * (degree - 1) 
     indices = np.where(Td == 0)
     Td[indices] = 1.
-
-    if weight is not None:
-        A = W / W.max()
-    triangles = np.diag(A**3)
-    if nbunch is not None:
-        triangles = triangles [:n]
-
-    C = triangles / Td
-    C = C.tolist()
+    triangles = np.diag(A**3)[:n]
+    cc = triangles / Td
+    cc = cc.tolist()
     
-    return C, degree
+    return cc,degree
     
 def node_degree_xy(G, x='out', y='out', nbunch = None,  weighted = False):
 

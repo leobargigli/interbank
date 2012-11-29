@@ -14,9 +14,13 @@ class Year:
     def __init__(self, filename, delimiter = ','):
 
         edgetype = np.dtype([('source','|S10'),
-                             ('dest','|S10' ), 
-                             ('weight',np.float32),
-                             ('location','|S10')])
+                                 ('dest','|S10' ), 
+                                 ('weight',np.float32),
+                                 ('location','|S10')])
+            
+#        edgetype = np.dtype([('source','|S10'),
+#                                 ('dest','|S10' ), 
+#                                 ('weight',np.float32)])
         
         try:
             edgelist = np.loadtxt(filename,
@@ -32,24 +36,30 @@ class Year:
 
          # this is to clean fake domestic relations
         
-        dom_indices = np.where(edgelist['location'] == 'domest')[0]
+        try:
             
-        for i in non_reporters:
+            dom_indices = np.where(edgelist['location'] == 'domest')[0]
             
-            nr_indices = np.where(edgelist['dest'] == i)[0]
-            dom_nr = np.intersect1d(dom_indices,nr_indices)
-            edgelist = np.delete(edgelist,dom_nr,0)
+            for i in non_reporters:
+            
+                nr_indices = np.where(edgelist['dest'] == i)[0]
+                dom_nr = np.intersect1d(dom_indices,nr_indices)
+                edgelist = np.delete(edgelist,dom_nr,0)
+        
+        except ValueError:
+            pass
             
             
             # this is to treat foreign subsidiaries as a separate node
             
-#            foreign_links = np.where(edgelist['location'] == 'estero')[0]
-#            reporters = np.array(list(reporters))                        
-#            for i in foreign_links:
-#                if (edgelist[i]['source'] == reporters).any() and (edgelist[i]['dest'] == reporters).any():
-#                    edgelist[i]['dest'] += 'F'
+#        foreign_links = np.where(edgelist['location'] == 'estero')[0]
+#        
+#        for i in foreign_links:
+#            if edgelist[i]['source'] == edgelist[i]['dest']:
+#                edgelist[i]['dest'] += 'F'
             
         # this is to sum weights across different link types
+        
         weights = edgelist['weight']
         edges = np.array([i['source'] +'*'+ i['dest'] for i in edgelist])
         uni_edges = np.unique(edges)
@@ -169,11 +179,7 @@ class Year:
             tot_tau, tot_p = (None,None)
     
         dC = np.average(dir_clustering_coefficient(G, nbunch = nbunch)[0])
-        dWC = np.average(dir_clustering_coefficient(G, weight = 'weight', nbunch = nbunch)[0])
-
         uC = np.average(clustering_coefficient(G, nbunch = nbunch)[0])
-        uWC = np.average(clustering_coefficient(G, weight = 'weight', nbunch = nbunch)[0])
-
         
         G.remove_edges_from(selfloops)
 
@@ -184,18 +190,24 @@ class Year:
             except TypeError:
                 avg_weight_path_length = nx.average_shortest_path_length(G,weight = 'weight')
                 
-        else:
+        elif len(comps[0]) > 1:
             avg_path_length = nx.average_shortest_path_length(comps[0])
             try:
                 avg_weight_path_length = nx.average_shortest_path_length(comps[0],weighted = True)
             except TypeError:
                 avg_weight_path_length = nx.average_shortest_path_length(comps[0],weight = 'weight')
         
+        else:
+            avg_path_length = 0
+            avg_weight_path_length = 0
+            
+        
 
         filename = self.filename + label + '_stats.dat'
         output = open(filename, 'wb')
         output.write('# of nodes: %i\n'%(nodes)) 
-        output.write('# of edges: %i\n'%(edges)) 
+        output.write('# of edges (net): %i\n'%(edges)) 
+        output.write('# of selfloops: %i\n'%(len(selfloops))) 
         output.write('Density: %f\n'%(d)) 
         output.write('Volume: %f\n'%(volume)) 
         output.write('Weak components size distribution:\n')
@@ -210,12 +222,10 @@ class Year:
         else:
             output.write('Out-weight assortativity (p-value): %f (%f)\n'%w_assortativity_out) 
             output.write('In-weight assortativity (p-value): %f (%f)\n'%w_assortativity_in) 
-        output.write('Degree reciprocity: %f\n'%(recip)) 
-        output.write('Weight reciprocity: %f\n'%(w_recip))
+        output.write('Degree reciprocity (p-value): %f (%f)\n'%(recip)) 
+        output.write('Weight reciprocity (p-value): %f (%f)\n'%(w_recip))
         output.write('Average directed clustering: %f\n'%(dC)) 
-        #output.write('Average dir. & weighted clustering: %f\n'%(dWC))
         output.write('Average undirected clustering: %f\n'%(uC)) 
-        #output.write('Average undir. & weighted clustering: %f\n'%(uWC))
         if out_tau is not None and out_p is not None:
             output.write('Kendall tau w_out / d_out vs d_out (p-value): %f (%f)\n' % (out_tau, out_p))
         if in_tau is not None and in_p is not None:

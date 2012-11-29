@@ -114,7 +114,12 @@ def main():
         except ValueError:
             pass
     
-    options = [('out',True,0),('out',False,50), ('in',True,0),('in',False,50)]
+    options = [
+        ('out',True,0),
+        ('out',False,50), 
+        ('in',True,0),
+        ('in',False,50)]
+        
     for i,j,k in options:
         try:
             part_dict = participation_ratio(G, i, nbunch = nodelist, degree = j, quant = k)
@@ -134,7 +139,6 @@ def main():
             
         
     clust_vs_degree(G, Y.filename, format = img, nbunch = nodelist)
-    #clust_vs_degree(G, Y.filename, weight = 'weight', format = img, nbunch = nodelist)
     clust_vs_degree(G, Y.filename, format = img, nbunch = nodelist, directed = True)
     
     os.chdir('..')
