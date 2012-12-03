@@ -55,7 +55,9 @@ class Year:
         foreign_links = np.where(edgelist['location'] == 'estero')[0]
         
         for i in foreign_links:
-            if edgelist[i]['source'] == edgelist[i]['dest']:
+            f_ctp =  edgelist[i]['dest']
+            chk_branch = np.intersect1d(reporters,f_ctp)
+            if len(chk_branch) > 0: 
                 edgelist[i]['dest'] += 'F'
             
         # this is to sum weights across different link types
@@ -80,9 +82,17 @@ class Year:
 
         G = nx.DiGraph()
         G.add_weighted_edges_from(edgelist)
+        nodes = np.array((np.sort(G.nodes())),dtype = '|S10')
+
+        # this is to list foreign subsidiaries of domestic groups
+        for_subs = list()        
+        for i in nodes:
+            if i.find('F')<> -1:
+                for_subs.append(i)
 
         self.Net = G
-        self.nodes = np.array((np.sort(G.nodes())),dtype = str)
+        self.nodes = nodes
+        self.for_subs = np.array(for_subs)
         self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
         self.filename = os.path.splitext(filename)[0]
         self.edgelist = edgelist
@@ -111,6 +121,7 @@ class Year:
             nbunch = G.nodes()
             
         nodes = len(nbunch)
+        for_subs = len(self.for_subs)
         edges = G.subgraph(nbunch).number_of_edges()
         selfloops = G.subgraph(nbunch).selfloop_edges()
         edges = edges - len(selfloops)
@@ -205,8 +216,9 @@ class Year:
 
         filename = self.filename + label + '_stats.dat'
         output = open(filename, 'wb')
-        output.write('# of nodes: %i\n'%(nodes)) 
-        output.write('# of edges (net): %i\n'%(edges)) 
+        output.write('# of nodes: %i\n'%nodes)
+        output.write('# of foreign subsidiaries: %i\n'%for_subs)
+        output.write('# of edges (net): %i\n'%edges) 
         output.write('# of selfloops: %i\n'%(len(selfloops))) 
         output.write('Density: %f\n'%(d)) 
         output.write('Volume: %f\n'%(volume)) 
