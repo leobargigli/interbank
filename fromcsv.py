@@ -77,8 +77,8 @@ def main():
         output.writelines(lines)
         output.flush()
         
-        edgefile = i + '_'+ optdict [opt] + '.edgelist'
-        output = open(edgefile, 'wb')
+        edgefile = i + '_'+ optdict[opt] + '.edgelist'
+#        output = open(edgefile, 'wb')
         where = {
                 1: 'WHERE DATA_CONTABILE = \'%s\' AND location = \'domest\' AND NATURA_RAPPORTO LIKE \'%%DEBITI%%\''% (i), 
                 3: 'WHERE DATA_CONTABILE = \'%s\' AND NATURA_RAPPORTO LIKE \'%%DEBITI%%\''% (i),
