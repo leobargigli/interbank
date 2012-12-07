@@ -52,7 +52,7 @@ def main():
         
         debtfile = i + '_foreign.debt'
         
-        command  = 'python querycsv.py -i %s -o %s \"SELECT ctp_controp from %s WHERE DATA_CONTABILE = "%s" AND location = \'estero\' AND NATURA_RAPPORTO LIKE \'%%IMPIEGHI%%\' GROUP BY ctp_controp\"' %(filename,debtfile, tablename, i)
+        command  = 'python querycsv.py -i %s -o %s \"SELECT ctp_controp from %s WHERE DATA_CONTABILE = "%s" AND location = \'estero\' AND NATURA_RAPPORTO = \'IMPIEGHI UNSECURED\' OR NATURA_RAPPORTO = \'IMPIEGHI SECURED\' GROUP BY ctp_controp\"' %(filename,debtfile, tablename, i)
         
         os.system(command)
         output = open(debtfile, 'r')
@@ -65,15 +65,6 @@ def main():
         
         non_reporters = setdiff1d(foreign_debtors,reporters) # non reporting nodes are a subset of foreign counterparts
         savetxt(debtfile,non_reporters,fmt = '%30s')        
-
-        #foreign_ctp = unique(foreign_debts)
-        #n = len(non_reporters)
-        #k = zeros((n,))
-        #for i in range(n):
-        #    k[i] = len(where(foreign_debts == non_reporters[i])[0])
-            
-        #out = array(zip(non_reporters,k))
-        #savetxt(degreefile,out,fmt = '%20s')        
         
         
 if __name__ == "__main__":
