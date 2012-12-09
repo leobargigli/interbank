@@ -50,8 +50,8 @@ def main():
     dates = open(datefile, 'r')
     dates = dates.readlines()
     dates.pop(0)
-    dates = [j.replace('"', '') for j in dates]
-    dates = [j.replace('\r\n', '') for j in dates]
+    dates = [j.replace('"','') for j in dates]
+    dates = [j.replace('\r\n','') for j in dates]
 
     for i in dates:
         
@@ -70,9 +70,9 @@ def main():
         
         edgefile = i + '_'+ optdict[opt] + '.edgelist'
         where = {
-                1: 'WHERE DATA_CONTABILE = \'%s\' AND location = \'domest\' AND NATURA_RAPPORTO = \'DEBITI UNSECURED\' OR NATURA_RAPPORTO = \'DEBITI SECURED\''% (i), 
-                3: 'WHERE DATA_CONTABILE = \'%s\' AND NATURA_RAPPORTO = \'DEBITI UNSECURED\' OR NATURA_RAPPORTO = \'DEBITI SECURED\''% (i),
-                2: 'WHERE DATA_CONTABILE = \'%s\' AND location = \'estero\' AND NATURA_RAPPORTO = \'DEBITI UNSECURED\' OR NATURA_RAPPORTO = \'DEBITI SECURED\''% (i)
+                1: 'WHERE DATA_CONTABILE = \'%s\' AND location = \'domest\' AND (NATURA_RAPPORTO = \'DEBITI UNSECURED\' OR NATURA_RAPPORTO = \'DEBITI SECURED\')'% (i), 
+                3: 'WHERE DATA_CONTABILE = \'%s\' AND (NATURA_RAPPORTO = \'DEBITI UNSECURED\' OR NATURA_RAPPORTO = \'DEBITI SECURED\)''% (i),
+                2: 'WHERE DATA_CONTABILE = \'%s\' AND location = \'estero\' AND (NATURA_RAPPORTO = \'DEBITI UNSECURED\' OR NATURA_RAPPORTO = \'DEBITI SECURED\')'% (i)
                  } 
         command  = 'python querycsv.py -i %s -o %s \"SELECT CTP_CAPOGRU,ctp_controp,sum(importo),location from %s %s GROUP BY CTP_CAPOGRU,ctp_controp\"' % (filename,edgefile, tablename, where[opt])
         os.system(command)
@@ -82,7 +82,7 @@ def main():
     
         if opt <> 1:
 
-            command  = 'python querycsv.py -i %s -o %s \"SELECT ctp_controp,CTP_CAPOGRU,sum(importo),location from %s WHERE DATA_CONTABILE = "%s" AND location = \'estero\' AND NATURA_RAPPORTO = \'IMPIEGHI UNSECURED\' OR NATURA_RAPPORTO = \'IMPIEGHI SECURED\' GROUP BY ctp_controp,CTP_CAPOGRU\"' %(filename,edgefile, tablename, i)
+            command  = 'python querycsv.py -i %s -o %s \"SELECT ctp_controp,CTP_CAPOGRU,sum(importo),location from %s WHERE DATA_CONTABILE = "%s" AND location = \'estero\' AND (NATURA_RAPPORTO = \'IMPIEGHI UNSECURED\' OR NATURA_RAPPORTO = \'IMPIEGHI SECURED\') GROUP BY ctp_controp,CTP_CAPOGRU\"' %(filename,edgefile, tablename, i)
             os.system(command)
             output = open(edgefile, 'r')
             lines2 = output.readlines()
