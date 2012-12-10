@@ -133,8 +133,8 @@ class Year:
             volume = G.subgraph(nbunch).size(weighted = True)
         
         comps = nx.weakly_connected_component_subgraphs(G.subgraph(nbunch))
-        comp_size = np.array([i.number_of_nodes() for i in comps], dtype = np.int32)
-    
+        comp_size = np.sort([i.number_of_nodes() for i in comps])[-1]
+        
         
         assortativity_out = assortativity(G, x='out', y='out', nbunch = nbunch)
         assortativity_in = assortativity(G, x='in', y='in', nbunch = nbunch)
@@ -220,30 +220,42 @@ class Year:
         output.write('# of foreign subsidiaries: %i\n'%for_subs)
         output.write('# of edges (net): %i\n'%edges) 
         output.write('# of selfloops: %i\n'%(len(selfloops))) 
-        output.write('Density: %f\n'%(d)) 
-        output.write('Volume: %f\n'%(volume)) 
-        output.write('Weak components size distribution:\n')
-        np.savetxt(output, comp_size, fmt='%1i')
-        output.write('Average path length: %f\n'%( avg_path_length )) 
-        output.write('Average weighted path length: %f\n'%( avg_weight_path_length )) 
-        output.write('Out-degree assortativity (p-value): %f (%f)\n'%assortativity_out)
-        output.write('In-degree assortativity (p-value): %f (%f)\n'%assortativity_in) 
+        output.write('Density: %.4f\n'%d) 
+        output.write('Volume: %.2f\n'%volume) 
+        output.write('Nodes in the largest component:% i\n'%comp_size)
+        output.write('Average path length: %f\n'%avg_path_length) 
+        output.write('Average weighted path length: %.4f\n'%avg_weight_path_length) 
+        output.write('Out-degree assortativity: %.4f\n'%assortativity_out[0])
+        output.write('(p-value): (%.4f)\n'%assortativity_out[1])
+        output.write('In-degree assortativity: %.4f \n'%assortativity_in[0]) 
+        output.write('(p-value): (%.4f)\n'%assortativity_in[1])
+
         if isinstance(w_assortativity_out, str):
-            output.write('Out-weight assortativity: %s\n'%( w_assortativity_out)) 
-            output.write('In-weight assortativity: %s\n'%( w_assortativity_in)) 
+            output.write('Out-weight assortativity: %s\n'%w_assortativity_out) 
+            output.write('In-weight assortativity: %s\n'%w_assortativity_in) 
         else:
-            output.write('Out-weight assortativity (p-value): %f (%f)\n'%w_assortativity_out) 
-            output.write('In-weight assortativity (p-value): %f (%f)\n'%w_assortativity_in) 
-        output.write('Degree reciprocity (p-value): %f (%f)\n'%(recip)) 
-        output.write('Weight reciprocity (p-value): %f (%f)\n'%(w_recip))
-        output.write('Average directed clustering: %f\n'%(dC)) 
-        output.write('Average undirected clustering: %f\n'%(uC)) 
+            output.write('Out-weight assortativity: %.4f \n'%w_assortativity_out[0])
+            output.write('(p-value): (%.4f)\n'%w_assortativity_out[1])
+            output.write('In-weight assortativity: %.4f \n'%w_assortativity_in[0]) 
+            output.write('(p-value): (%.4f)\n'%w_assortativity_in[1]) 
+
+        output.write('Degree reciprocity: %.4f \n'%recip[0]) 
+        output.write('(p-value): (%.4f) \n'%recip[1]) 
+        output.write('Weight reciprocity: %.4f\n'%w_recip[0])
+        output.write('(p-value): (%.4f)\n'%w_recip[1])
+        output.write('Average directed clustering: %.4f\n'%dC) 
+        output.write('Average undirected clustering: %.4f\n'%uC) 
+        
         if out_tau is not None and out_p is not None:
-            output.write('Kendall tau w_out / d_out vs d_out (p-value): %f (%f)\n' % (out_tau, out_p))
+            output.write('Kendall tau w_out / d_out vs d_out: %.4f \n' % out_tau)
+            output.write('(p-value): (%.4f)\n' % out_p)
         if in_tau is not None and in_p is not None:
-            output.write('Kendall tau w_in / d_in vs d_in (p-value): %f (%f)\n'% (in_tau, in_p))
+            output.write('Kendall tau w_in / d_in vs d_in: %.4f \n'% in_tau)
+            output.write('(p-value): (%.4f)\n'% in_p)
+            
         if tot_tau is not None and tot_p is not None:
-            output.write('Kendall tau w / d vs d (p-value): %f (%f)\n'% (tot_tau, tot_p))
+            output.write('Kendall tau w / d vs d: %.4f \n'% tot_tau)
+            output.write('(p-value): (%.4f)\n'% tot_p)
         
         output.flush()
 

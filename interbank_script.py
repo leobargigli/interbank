@@ -90,7 +90,7 @@ def main():
             knnk = np.array(knnk)
             k = knnk[:, 0]
             nnk = knnk[:, 1]
-            labels = [r'$k$',r'$k_{nn}$','Average neighbor %s vs node %s'%(i, i)]
+            labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
             scatter(k, nnk, labels, Y.filename + label,fmt = img)
 
         indices = np.where(x == 0)
@@ -129,7 +129,7 @@ def main():
             part = part_dict[:, 1]
             labeldict = {True: 'inverse degree', False: 'weight'}
             ydict = {True: r'$1 / k$', False : ''} 
-            labels = [ydict[j],r'Part. ratio',r'Participation ratio vs %s (%s)' % (labeldict[j],i)]
+            labels = [ydict[j],r'Part. ratio',r'Participation_ratio_vs_%s%s' % (i,labeldict[j])]
             scatter(epart, part, labels, Y.filename + label, diag = True,fmt = img)
 
         except IndexError:
