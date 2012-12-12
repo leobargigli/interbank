@@ -8,7 +8,7 @@ from plplot import plplot
 from basic_stats_funcs import *
 
 
-USAGE = "%prog --n(odes) NODEFILE FILENAME "
+USAGE = "%prog --n(odes) NODEFILE --m --r FILENAME "
 USE_DESCRIPTION = "The FILENAME file must be a weighted edgelist."
 parser = OptionParser( USAGE , description= " " + USE_DESCRIPTION ) 
 parser.set_defaults( verbosity=None )
@@ -17,14 +17,22 @@ parser.add_option( "--nodes", '--n',
     help = "a list of nodes for the analysis", 
 )
 
+parser.add_option( "--maturity", '--m',
+    dest = "maturity",
+    help = "must be either longterm or overnight", 
+)
+
+parser.add_option( "--rapporto", '--r',
+    dest = "rapporto",
+    help = "must be either SECURED or UNSECURED", 
+)
+
 
 def main():
     ( opts , args ) = parser.parse_args()
     __validate_opts_and_args( opts , args )
     filename = args[0]
 
-    
-    
     if opts.nodelist:
         nodelist = np.loadtxt(opts.nodelist, 
                               dtype = str,
@@ -37,19 +45,28 @@ def main():
     
     if filename.find('dom') <> -1:
         label = ''
+
+    if opts.rapporto is None:
+        opts.rapporto = 'total'
     
-    Y = Year(filename)
+    if opts.maturity is None:
+        opts.maturity = 'total'
+
+    
+    Y = Year(filename,
+             rapporto = opts.rapporto, 
+             maturity = opts.maturity)
 
     # this is to clean from fake domestic links    
     if nodelist is not None:
-        
         nodelist = np.intersect1d(nodelist,Y.nodes)
-        
+    
+   
     try:
-        os.chdir(Y.filename + label +'_stats')
+        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
     except OSError:
-        os.mkdir(Y.filename  + label + '_stats')
-        os.chdir(Y.filename  + label + '_stats')
+        os.mkdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
+        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
   
     G = Y.Net
     
@@ -58,11 +75,7 @@ def main():
     else:
         img = 'png'
 
-    filename = Y.filename + label + '_stats.dat'
-    output = open(filename, 'a')
-    output.write('\n')
     distG = dists(G, nbunch = nodelist)
-
     Y.stats(distG,nbunch = nodelist)
 
     fmts = {
@@ -77,12 +90,16 @@ def main():
      }
     #print distG
     
+    filename = Y.filename + label + opts.rapporto + opts.maturity + '_stats.dat'
+    output = open(filename, 'a')
+    output.write('\n')    
+    
     for i in distG:
         
         x = distG[i]
 
         
-        distfile = Y.filename + '_' + i + label +'.distr'
+        distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '.distr'
         np.savetxt(distfile, x, fmt = fmts[i])
         if i <>'net cells' and i <> 'gross cells':
             knnk = k_vs_nnk(G, i, nbunch = nodelist)
@@ -91,7 +108,7 @@ def main():
             k = knnk[:, 0]
             nnk = knnk[:, 1]
             labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
-            scatter(k, nnk, labels, Y.filename + label,fmt = img)
+            scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
 
         indices = np.where(x == 0)
         x = np.delete(x, indices)
@@ -102,7 +119,7 @@ def main():
         except ValueError:
             pass
         try:
-            h = plplot(x,xmin,alpha, ntail, i, Y.filename + label, format = img)
+            h = plplot(x,xmin,alpha, ntail, i, opts.rapporto + opts.maturity + Y.filename + label, format = img)
             output.write('estimated exponent of %s distribution: %.2f\n'%(i, alpha))
             output.write('# datapoints in the tail of %s distribution: %i\n'%(i , ntail))
             output.write('min %s value in the tail: %.2f\n'%(i, xmin))
@@ -130,7 +147,7 @@ def main():
             labeldict = {True: 'inverse degree', False: 'weight'}
             ydict = {True: r'$1 / k$', False : ''} 
             labels = [ydict[j],r'Part. ratio',r'Participation_ratio_vs_%s%s' % (i,labeldict[j])]
-            scatter(epart, part, labels, Y.filename + label, diag = True,fmt = img)
+            scatter(epart, part, labels, opts.rapporto + opts.maturity + Y.filename + label, diag = True,fmt = img)
 
         except IndexError:
             pass
@@ -138,8 +155,8 @@ def main():
             pass
             
         
-    clust_vs_degree(G, Y.filename, format = img, nbunch = nodelist)
-    clust_vs_degree(G, Y.filename, format = img, nbunch = nodelist, directed = True)
+    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename, format = img, nbunch = nodelist)
+    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename, format = img, nbunch = nodelist, directed = True)
     
     os.chdir('..')
         

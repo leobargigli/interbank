@@ -11,17 +11,16 @@ from cPickle import dump
 
 class Year:
 
-    def __init__(self, filename, delimiter = ','):
+    def __init__(self, filename, delimiter = ',',rapporto = 'total', maturity = 'total'):
 
         edgetype = np.dtype([('source','|S10'),
                                  ('dest','|S10' ), 
                                  ('weight',np.float32),
-                                 ('location','|S10')])
-            
-#        edgetype = np.dtype([('source','|S10'),
-#                                 ('dest','|S10' ), 
-#                                 ('weight',np.float32)])
-        
+                                 ('location','|S10'),
+                                 ('natura_rapporto','|S30'),
+                                 ('maturity','|S10')
+                                 ])
+                    
         try:
             edgelist = np.loadtxt(filename,
                                   dtype = edgetype) 
@@ -30,6 +29,27 @@ class Year:
                                   delimiter = ',',
                                   dtype = edgetype) 
 
+
+        # this is to filter out according to natura_rapporto and maturity
+        try:        
+            n = len(edgelist)
+        except TypeError:
+            return None
+            
+        for i in range(n):
+            x = edgelist['natura_rapporto'][i]
+            edgelist['natura_rapporto'][i] = x.split(' ')[1]
+        
+        if rapporto is not 'total':
+            indices = np.where(edgelist['natura_rapporto'] == rapporto)
+            edgelist = edgelist[indices]
+            
+        if maturity is not 'total':
+            indices = np.where(edgelist['maturity'] == maturity)
+            edgelist = edgelist[indices]
+            
+        ####
+        
         reporters = np.unique(edgelist['source'])        
         counterparts = np.unique(edgelist['dest'])
         non_reporters = np.setdiff1d(counterparts,reporters)
@@ -63,7 +83,8 @@ class Year:
         # this is to sum weights across different link types
         
         weights = edgelist['weight']
-        edges = np.array([i['source'] +'*'+ i['dest'] for i in edgelist])
+        edges = np.array([i['source'] + '*' 
+        + i['dest'] for i in edgelist])
         uni_edges = np.unique(edges)
         q = len(uni_edges)
 
@@ -90,12 +111,23 @@ class Year:
             if i.find('F')<> -1:
                 for_subs.append(i)
 
+        if rapporto is None:
+            rapporto = ''
+        
+        if maturity is None:
+            maturity = ''
+
         self.Net = G
         self.nodes = nodes
         self.for_subs = np.array(for_subs)
-        self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
+        try:
+            self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
+        except ValueError:
+            pass
         self.filename = os.path.splitext(filename)[0]
         self.edgelist = edgelist
+        self.rapporto = rapporto
+        self.maturity = maturity
         
 
 
@@ -214,7 +246,7 @@ class Year:
             
         
 
-        filename = self.filename + label + '_stats.dat'
+        filename = self.filename + label + self.rapporto + self.maturity + '_stats.dat'
         output = open(filename, 'wb')
         output.write('# of nodes: %i\n'%nodes)
         output.write('# of foreign subsidiaries: %i\n'%for_subs)
