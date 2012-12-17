@@ -11,15 +11,23 @@ from cPickle import dump
 
 class Year:
 
-    def __init__(self, filename, delimiter = ',',rapporto = 'total', maturity = 'total'):
+    def __init__(self, filename, delimiter = ',',rapporto = 'SEC+UNSEC', maturity = 'OVN+LT', dtype = 0):
 
-        edgetype = np.dtype([('source','|S10'),
+
+        if dtype == 0:
+            edgetype = np.dtype([('source','|S10'),
                                  ('dest','|S10' ), 
                                  ('weight',np.float32),
                                  ('location','|S10'),
                                  ('natura_rapporto','|S30'),
                                  ('maturity','|S10')
                                  ])
+        else:
+            edgetype = np.dtype([('source','|S10'),
+                                 ('dest','|S10' ), 
+                                 ('weight',np.float32),
+                                 ])
+            
                     
         try:
             edgelist = np.loadtxt(filename,
@@ -40,11 +48,11 @@ class Year:
             x = edgelist['natura_rapporto'][i]
             edgelist['natura_rapporto'][i] = x.split(' ')[1]
         
-        if rapporto is not 'total':
+        if rapporto is not 'SEC+UNSEC':
             indices = np.where(edgelist['natura_rapporto'] == rapporto)
             edgelist = edgelist[indices]
             
-        if maturity is not 'total':
+        if maturity is not 'OVN+LT':
             indices = np.where(edgelist['maturity'] == maturity)
             edgelist = edgelist[indices]
             
@@ -128,6 +136,7 @@ class Year:
         self.edgelist = edgelist
         self.rapporto = rapporto
         self.maturity = maturity
+        
         
 
 

@@ -114,6 +114,7 @@ def main():
                                         try:
                                             col_nodes = G[kb][hb][ib][jb].nodes()
                                             nodelist = intersect1d(row_nodes,col_nodes)
+                                            print len(row_nodes),len(col_nodes),len(nodelist)
                                             A = to_numpy_matrix(G[k][h][i][j], nodelist = nodelist, weight = None)
                                             B = to_numpy_matrix(G[kb][hb][ib][jb], nodelist = nodelist, weight = None)
                                             print A.sum(),B.sum()
