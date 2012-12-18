@@ -11,7 +11,10 @@ from cPickle import dump
 
 class Year:
 
-    def __init__(self, filename, delimiter = ',',rapporto = 'SEC+UNSEC', maturity = 'OVN+LT', dtype = 0):
+    def __init__(self, filename, delimiter = ',',
+                 rapporto = 'SEC+UNSEC', 
+                 maturity = 'OVN+LT', 
+                 dtype = 0):
 
 
         if dtype == 0:
@@ -48,11 +51,11 @@ class Year:
             x = edgelist['natura_rapporto'][i]
             edgelist['natura_rapporto'][i] = x.split(' ')[1]
         
-        if rapporto is not 'SEC+UNSEC':
+        if rapporto is 'SECURED' or rapporto is 'UNSECURED':
             indices = np.where(edgelist['natura_rapporto'] == rapporto)
             edgelist = edgelist[indices]
             
-        if maturity is not 'OVN+LT':
+        if maturity is 'longterm' or maturity is 'overnight':
             indices = np.where(edgelist['maturity'] == maturity)
             edgelist = edgelist[indices]
             
@@ -181,8 +184,8 @@ class Year:
         assortativity_in = assortativity(G, x='in', y='in', nbunch = nbunch)
 
         try:
-            w_assortativity_out = assortativity(G, x='out', y='out', weighted = True, nbunch = nbunch)
-            w_assortativity_in = assortativity(G, x='in', y='in', weighted = True, nbunch = nbunch)
+            w_assortativity_out = assortativity(G, x = 'out', y = 'out', weighted = True, nbunch = nbunch)
+            w_assortativity_in = assortativity(G, x = 'in', y = 'in', weighted = True, nbunch = nbunch)
         except TypeError:
             w_assortativity_out = 'na'
             w_assortativity_in  = 'na'
