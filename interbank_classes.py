@@ -176,9 +176,11 @@ class Year:
         except TypeError:
             volume = G.subgraph(nbunch).size(weighted = True)
         
-        comps = nx.weakly_connected_component_subgraphs(G.subgraph(nbunch))
-        comp_size = np.sort([i.number_of_nodes() for i in comps])[-1]
-        
+        wcomps = nx.weakly_connected_component_subgraphs(G.subgraph(nbunch))
+        wcomp_size = np.sort([i.number_of_nodes() for i in wcomps])[-1]
+
+        scomps = nx.strongly_connected_component_subgraphs(G.subgraph(nbunch))
+        scomp_size = np.sort([i.number_of_nodes() for i in scomps])[-1]
         
         assortativity_out = assortativity(G, x='out', y='out', nbunch = nbunch)
         assortativity_in = assortativity(G, x='in', y='in', nbunch = nbunch)
@@ -266,7 +268,8 @@ class Year:
         output.write('# of selfloops: %i\n'%(len(selfloops))) 
         output.write('Density: %.4f\n'%d) 
         output.write('Volume: %.2f\n'%volume) 
-        output.write('Nodes in the largest component:% i\n'%comp_size)
+        output.write('Nodes in the largest weak component:% i\n'%wcomp_size)
+        output.write('Nodes in the largest strong component:% i\n'%scomp_size)
         output.write('Average path length: %f\n'%avg_path_length) 
         output.write('Average weighted path length: %.4f\n'%avg_weight_path_length) 
         output.write('Out-degree assortativity: %.4f\n'%assortativity_out[0])
