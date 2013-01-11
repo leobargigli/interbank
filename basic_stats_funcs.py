@@ -215,46 +215,71 @@ def k_vs_nnk(G, label, nbunch = None):
     
     return knnk
 
-def  participation_ratio(G, direction, nbunch = None, quant = 50, degree = True):
-    
-    
-    functions = {'out': G.out_degree, 'in': G.in_degree}
+
+def matrix_from_graph(G,nbunch = None):
     
     if nbunch is not None:
-        nodes = set(G.nodes())
-        fnodes = np.array(list(nodes - set(nbunch)))
-        nbunch = np.array(list(nbunch))
+        nodes = G.nodes()
+        fnodes = np.setdiff1d(nodes,nbunch)
         np.sort(nbunch)
         np.sort(fnodes)
         nodelist = np.append(nbunch, fnodes)
-        n, m = (len(nbunch), len(fnodes))
     else:
         nodelist = G.nodes()
         nbunch = G.nodes()
-        n = len(G)
         
     A = nx.to_numpy_matrix(G, nodelist = nodelist)
     indices = np.diag_indices_from(A)
     A[indices] = 0.
+    A = np.array(A)
     
-    if direction == 'in':
-        A = A.T
+    return A
+
+def participation_ratio(A,weight, nbunch = None):
+    
+    if nbunch is not None:
+        n = len(nbunch)
+    else:
+        n = len(A)
     
     # this is the observed participatio ratio
     
-    w = np.asarray(A.sum(1))
-    indices = np.where(w == 0)
-    w[indices] = 1.
-    w.resize((len(w),))
-    w = 1. / w
-    w = np.asmatrix(np.diag(w))
-    S = w * A
-
-    S = np.power(S, 2)
-    part_r = np.asarray(S.sum(1))
-    part_r.resize((len(part_r),))
+    indices = np.where(weight == 0.)
+    weight[indices] = 1.
+    q = len(weight)
+    weight.resize((q,1))
+    W = np.repeat(weight,q,1)
+    S = A / W
+    S = S ** 2
+    part_r = S.sum(1)
     part_r = part_r[:n]
+
+    return part_r
     
+    
+def exp_part_ratio(G,direction, nbunch = None, quant = 50, degree = True):
+
+    functions = {
+    'out': G.out_degree,
+    'in': G.in_degree    
+    }
+
+    A = matrix_from_graph(G, nbunch = nbunch)
+    if direction is 'in':
+        A = A.T
+    weight = A.sum(1)
+    part_r = participation_ratio(A, weight, nbunch = nbunch)
+
+    if nbunch is not None:
+        nodes = G.nodes()
+        fnodes = np.setdiff1d(nodes,nbunch)
+        np.sort(nbunch)
+        np.sort(fnodes)
+        n,m = len(nbunch),len(fnodes)
+    else:
+        nodes = G.nodes()     
+        nbunch = G.nodes()
+        n = len(nodes)
 
     if degree is False:
 

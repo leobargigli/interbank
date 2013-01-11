@@ -92,8 +92,12 @@ def main():
 
     size = len(dates) * len(location) * len(rapporto) * len(maturity) 
     J = zeros((size,size))
+    I = zeros((size,size))
     
-    print 'values:'
+    links = zeros((size,))
+    nodes = zeros((size,))
+    
+    #print 'values:'
 
     n = 0
     labels = list()
@@ -107,6 +111,8 @@ def main():
                         row_nodes = G[k][h][i][j].nodes()
                         labels.append(k + h + i + j + '\n')
                         m = 0
+                        nodes[n] = len(row_nodes)
+                        links[n] = G[k][h][i][j].number_of_edges()
                         for kb in dates:
                             for hb in location:
                                 for ib in rapporto:
@@ -114,11 +120,12 @@ def main():
                                         try:
                                             col_nodes = G[kb][hb][ib][jb].nodes()
                                             nodelist = intersect1d(row_nodes,col_nodes)
-                                            print len(row_nodes),len(col_nodes),len(nodelist)
+                                            #print len(row_nodes),len(col_nodes),len(nodelist)
                                             A = to_numpy_matrix(G[k][h][i][j], nodelist = nodelist, weight = None)
                                             B = to_numpy_matrix(G[kb][hb][ib][jb], nodelist = nodelist, weight = None)
-                                            print A.sum(),B.sum()
+                                            #print A.sum(),B.sum()
                                             J[n,m] = minimum(A,B).sum() / maximum(A,B).sum()
+                                            I[n,m] = len(nodelist)
                                         except AttributeError:
                                             col_to_delete.append(m)
                                         m += 1
@@ -128,10 +135,16 @@ def main():
                     n+=1
     
     to_delete = intersect1d(row_to_delete,col_to_delete)    
-    print 'deleted row / cols: ' + str(len(to_delete))
+    #print 'deleted row / cols: ' + str(len(to_delete))
     
     J = delete(J,to_delete,0)
     J = delete(J,to_delete,1)
+
+    I = delete(I,to_delete,0)
+    I = delete(I,to_delete,1)
+    
+    nodes = delete(nodes,to_delete)
+    links = delete(links,to_delete)
 
     filename = ''
 
@@ -142,12 +155,16 @@ def main():
         filename += 'total'
         
     savetxt(filename + '.matrix',J,fmt = '%.4f')
+    savetxt(filename + '.intersection',I,fmt = '%.4f')
+    savetxt(filename + '.nodes',nodes,fmt = '%.4f')
+    savetxt(filename + '.links',links,fmt = '%.4f')
+    
     output = open(filename + '.labels','wb')
     output.writelines(labels)
     output.flush()    
     
-    print 'shape of similarity matrix:'
-    print J.shape
+    #print 'shape of similarity matrix:'
+    #print J.shape
                                     
 
                     

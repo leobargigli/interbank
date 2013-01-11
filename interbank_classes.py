@@ -240,19 +240,19 @@ class Year:
         
         G.remove_edges_from(selfloops)
 
-        if len(comps) == 1:
+        if len(wcomps) == 1:
             avg_path_length = nx.average_shortest_path_length(G)
             try:
                 avg_weight_path_length = nx.average_shortest_path_length(G,weighted = True)
             except TypeError:
                 avg_weight_path_length = nx.average_shortest_path_length(G,weight = 'weight')
                 
-        elif len(comps[0]) > 1:
-            avg_path_length = nx.average_shortest_path_length(comps[0])
+        elif len(wcomps[0]) > 1:
+            avg_path_length = nx.average_shortest_path_length(wcomps[0])
             try:
-                avg_weight_path_length = nx.average_shortest_path_length(comps[0],weighted = True)
+                avg_weight_path_length = nx.average_shortest_path_length(wcomps[0],weighted = True)
             except TypeError:
-                avg_weight_path_length = nx.average_shortest_path_length(comps[0],weight = 'weight')
+                avg_weight_path_length = nx.average_shortest_path_length(wcomps[0],weight = 'weight')
         
         else:
             avg_path_length = 0

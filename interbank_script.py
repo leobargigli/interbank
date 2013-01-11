@@ -139,7 +139,7 @@ def main():
         
     for i,j,k in options:
         try:
-            part_dict = participation_ratio(G, i, nbunch = nodelist, degree = j, quant = k)
+            part_dict = exp_part_ratio(G, i, nbunch = nodelist, degree = j, quant = k)
             part_dict = part_dict.items()
             part_dict = np.array(part_dict)
             epart = part_dict[:, 0]
