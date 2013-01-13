@@ -12,8 +12,8 @@ from cPickle import dump
 class Year:
 
     def __init__(self, filename, delimiter = ',',
-                 rapporto = 'SEC+UNSEC', 
-                 maturity = 'OVN+LT', 
+                 rapporto = 'TOT', 
+                 maturity = 'TOT', 
                  dtype = 0):
 
 
@@ -55,9 +55,10 @@ class Year:
             indices = np.where(edgelist['natura_rapporto'] == rapporto)
             edgelist = edgelist[indices]
             
-        if maturity is 'longterm' or maturity is 'overnight':
-            indices = np.where(edgelist['maturity'] == maturity)
-            edgelist = edgelist[indices]
+        if maturity is 'longterm' or maturity is 'overnight' or maturity is 'nonsignif':
+            if rapporto is 'UNSECURED':
+                indices = np.where(edgelist['maturity'] == maturity)
+                edgelist = edgelist[indices]
             
         ####
         

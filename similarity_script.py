@@ -23,25 +23,18 @@ def main():
     rapporto = [
     'SECURED',
     'UNSECURED',
-    'SEC+UNSEC'    
-    ]
+    'TOT']
         
     maturity = [
     'overnight',
     'longterm',
-    'OVN+LT'    
-    ]
+    'nonsignif',
+    'TOT']
     
     location = [
     'dom',
     'tot_adj',
-    'tot_unadj'
-    ]
-    
-#    adj = [
-#    'adj',
-#    'unadj'    
-#    ]
+    'tot_unadj']
     
     dates = open('date.csv', 'r')
     dates = dates.readlines()
@@ -87,6 +80,7 @@ def main():
                     except AttributeError:
                         G[k][h][i][j] =  None
                     n += 1
+                    
     
     print 'number of combinations: ' + str(n)
 
