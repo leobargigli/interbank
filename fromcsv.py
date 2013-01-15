@@ -50,7 +50,6 @@ def main():
     except IndexError:
         edgelist = loadtxt(filename, delimiter = ';',dtype = edgetype)
         
-    print len(edgelist)
     dates = unique(edgelist['date'])
 
     for i in dates:
@@ -59,7 +58,7 @@ def main():
         indices = where(edgelist['date'] == i)
         y_edgelist = edgelist[indices]
         reporters = unique(y_edgelist['source'])
-        print 'reporters:' + str(len(reporters))
+        print i + '_reporters:' + str(len(reporters))
         savetxt(reporterfile,reporters,fmt ='%s')
     
     
