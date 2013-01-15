@@ -1,7 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jan 15 11:06:33 2013
+
+@author: leonardo
+"""
+
 import os
 import sys
 from optparse import OptionParser
-from numpy import loadtxt,setdiff1d
+from numpy import *
 
 USAGE = "%prog [-d(omestic)] [-f(oreign)] FILENAME"
 USE_DESCRIPTION = "The FILENAME file must be a csv file."
@@ -26,94 +33,78 @@ parser.add_option( "-f" , "--f",
 def main():
 
     ( opts , args ) = parser.parse_args()
-    __validate_opts_and_args( opts , args )
     filename = args[0]
-    tablename = os.path.splitext(filename)[0]
-    datefile = 'date.csv'
+    edgetype = dtype([('date','|S10'),
+                      ('weight',float32),
+                    ('source','|S10'),
+                    ('dest','|S10' ),
+                    ('natura_rapporto','|S10'),
+                    ('cred_deb','|S10'),
+                    ('infragruppo',int32),
+                    ('location','|S10'),
+                    ('statoctp','|S10'),
+                    ('maturity','|S10')])
 
-    if opts.domestic is None and opts.foreign is not None:
-        opts.domestic = 0
+    try:
+        edgelist = loadtxt(filename, delimiter = ',',dtype = edgetype)
+    except IndexError:
+        edgelist = loadtxt(filename, delimiter = ';',dtype = edgetype)
         
-    if opts.foreign is None and opts.domestic is not None:
-        opts.foreign = 0
-        
-    if opts.foreign is None and opts.domestic is None:
-        opts.domestic = 1
-        opts.foreign = 2
-        
-    optdict = {1: 'dom', 2: 'for' , 3: 'tot'}
-    
-    opt = opts.domestic + opts.foreign # possible values: 1 (domestic) ; 2 (foreign); 3 (total) 
-    
-    command  = 'python querycsv.py -i %s -o %s \"SELECT DATA_CONTABILE from %s GROUP BY DATA_CONTABILE\"' %(filename,datefile, tablename)
-    os.system(command)
-    dates = open(datefile, 'r')
-    dates = dates.readlines()
-    dates.pop(0)
-    dates = [j.replace('"','') for j in dates]
-    dates = [j.replace('\r\n','') for j in dates]
+    print len(edgelist)
+    dates = unique(edgelist['date'])
 
     for i in dates:
         
         reporterfile = i + '_reporters.csv'
-        command  = 'python querycsv.py -i %s -o %s \"SELECT CTP_CAPOGRU from %s WHERE DATA_CONTABILE = \'%s\' GROUP BY CTP_CAPOGRU\"' % (filename , reporterfile , tablename, i)
-        os.system(command)
-        output = open(reporterfile, 'r')
-        lines = output.readlines()
-        lines.pop(0)
-
-        lines = [j.replace('"', '') for j in lines]
-
-        output = open(reporterfile, 'wb')
-        output.writelines(lines)
-        output.flush()
-        
-        edgefile = i + '_'+ optdict[opt] + '.edgelist'
-        where = {
-                1: 'WHERE DATA_CONTABILE = \'%s\' AND location = \'domest\' AND (NATURA_RAPPORTO = \'DEBITI UNSECURED\' OR NATURA_RAPPORTO = \'DEBITI SECURED\')'% (i), 
-                3: 'WHERE DATA_CONTABILE = \'%s\' AND (NATURA_RAPPORTO = \'DEBITI UNSECURED\' OR NATURA_RAPPORTO = \'DEBITI SECURED\')'% (i),
-                2: 'WHERE DATA_CONTABILE = \'%s\' AND location = \'estero\' AND (NATURA_RAPPORTO = \'DEBITI UNSECURED\' OR NATURA_RAPPORTO = \'DEBITI SECURED\')'% (i)
-                 } 
-        command  = 'python querycsv.py -i %s -o %s \"SELECT CTP_CAPOGRU,ctp_controp,sum(importo),location,NATURA_RAPPORTO,maturity from %s %s GROUP BY CTP_CAPOGRU,ctp_controp\"' % (filename,edgefile, tablename, where[opt])
-        os.system(command)
-        output = open(edgefile, 'r')
-        lines = output.readlines()
-        lines.pop(0)
+        indices = where(edgelist['date'] == i)
+        y_edgelist = edgelist[indices]
+        reporters = unique(y_edgelist['source'])
+        print 'reporters:' + str(len(reporters))
+        savetxt(reporterfile,reporters,fmt ='%s')
     
-        if opt <> 1:
-
-            command  = 'python querycsv.py -i %s -o %s \"SELECT ctp_controp,CTP_CAPOGRU,sum(importo),location,NATURA_RAPPORTO,maturity from %s WHERE DATA_CONTABILE = "%s" AND location = \'estero\' AND (NATURA_RAPPORTO = \'IMPIEGHI UNSECURED\' OR NATURA_RAPPORTO = \'IMPIEGHI SECURED\') GROUP BY ctp_controp,CTP_CAPOGRU\"' %(filename,edgefile, tablename, i)
-            os.system(command)
-            output = open(edgefile, 'r')
-            lines2 = output.readlines()
-            lines2.pop(0)
-            for  j in lines2:          
-                lines.append(j)
-
-        lines = [j.replace('"', '') for j in lines]
-        
-        output = open(edgefile, 'wb')
-        output.writelines(lines)
-        output.flush()
-
-        
     
+    if opts.domestic == 1:
+        
+        indices = where(edgelist['location'] == 'domest')
+        edgelist = edgelist[indices]
+        indices = where(edgelist['cred_deb'] == 'DEBITI')
+        edgelist = edgelist[indices]
+        opt = 'dom'
+        
 
-def __validate_opts_and_args( opts , args ):
-    """Makes sure that one file has been passed and that it exists.
-    """
-    if len(args)<1:
-        parser.print_help()
-        sys.exit( 1 )
-    if not os.path.exists( args[0] ): 
-        parser.print_help()
-        sys.stderr.write( "FILE {0} DOES NOT EXISTS\n".format(args[0]) )
-        sys.exit( 1 )
-  #  if opts.domestic and opts.foreign:
-  #      sys.stderr.write( "*** choose either the --d or the --f option ***\n\n")
-  #      parser.print_help()
-  #      sys.exit( 1 )
-
+    elif opts.foreign == 2:
+        indices = where(edgelist['location'] == 'estero')
+        edgelist = edgelist[indices]
+        indices = where(edgelist['cred_deb'] == 'IMPIEGHI')
+        source = edgelist['dest'][indices].copy()
+        dest = edgelist['source'][indices].copy()
+        edgelist['source'][indices] = source
+        edgelist['dest'][indices] = dest
+        opt = 'for'
+        
+    else:
+        
+        indices_l = where(edgelist['location'] == 'domest')
+        indices_d = where(edgelist['cred_deb'] == 'IMPIEGHI')
+        indices = intersect1d(indices_l[0],indices_d[0])
+        edgelist = delete(edgelist,indices)
+        indices = where(edgelist['cred_deb'] == 'IMPIEGHI')
+        source = edgelist['dest'][indices].copy()
+        dest = edgelist['source'][indices].copy()
+        edgelist['source'][indices] = source
+        edgelist['dest'][indices] = dest
+        opt = 'tot'
+        
+    for i in dates:
+        
+        indices = where(edgelist['date'] == i)
+        y_edgelist = edgelist[indices]
+        filename = i + '_' + opt 
+        print i,len(y_edgelist),y_edgelist['weight'].sum()
+        save(filename,y_edgelist)
+                                
+    
 if __name__ == "__main__":
     main()
+
     

@@ -17,48 +17,23 @@ class Year:
                  dtype = 0):
 
 
-        if dtype == 0:
-            edgetype = np.dtype([('source','|S10'),
-                                 ('dest','|S10' ), 
-                                 ('weight',np.float32),
-                                 ('location','|S10'),
-                                 ('natura_rapporto','|S30'),
-                                 ('maturity','|S10')
-                                 ])
-        else:
-            edgetype = np.dtype([('source','|S10'),
-                                 ('dest','|S10' ), 
-                                 ('weight',np.float32),
-                                 ])
-            
-                    
-        try:
-            edgelist = np.loadtxt(filename,
-                                  dtype = edgetype) 
-        except IndexError:
-            edgelist = np.loadtxt(filename, 
-                                  delimiter = ',',
-                                  dtype = edgetype) 
 
+        edgelist = np.load(filename)
+#        n = len(edgelist)
 
         # this is to filter out according to natura_rapporto and maturity
-        try:        
-            n = len(edgelist)
-        except TypeError:
-            return None
             
-        for i in range(n):
-            x = edgelist['natura_rapporto'][i]
-            edgelist['natura_rapporto'][i] = x.split(' ')[1]
+#        for i in range(n):
+#            x = edgelist['natura_rapporto'][i]
+#            edgelist['natura_rapporto'][i] = x.split(' ')[1]
         
         if rapporto is 'SECURED' or rapporto is 'UNSECURED':
             indices = np.where(edgelist['natura_rapporto'] == rapporto)
             edgelist = edgelist[indices]
             
         if maturity is 'longterm' or maturity is 'overnight' or maturity is 'nonsignif':
-            if rapporto is 'UNSECURED':
-                indices = np.where(edgelist['maturity'] == maturity)
-                edgelist = edgelist[indices]
+            indices = np.where(edgelist['maturity'] == maturity)
+            edgelist = edgelist[indices]
             
         ####
         
@@ -220,7 +195,6 @@ class Year:
         mean_iw = in_weight / in_degree
         mean_w = weight / degree
 
-
         try:
             out_tau, out_p = kendalltau(mean_ow, out_degree)
             in_tau, in_p = kendalltau(mean_iw, in_degree)
@@ -239,16 +213,7 @@ class Year:
         dC = np.average(dir_clustering_coefficient(G, nbunch = nbunch)[0])
         uC = np.average(clustering_coefficient(G, nbunch = nbunch)[0])
         
-        G.remove_edges_from(selfloops)
-
-        if len(wcomps) == 1:
-            avg_path_length = nx.average_shortest_path_length(G)
-            try:
-                avg_weight_path_length = nx.average_shortest_path_length(G,weighted = True)
-            except TypeError:
-                avg_weight_path_length = nx.average_shortest_path_length(G,weight = 'weight')
-                
-        elif len(wcomps[0]) > 1:
+        if len(wcomps) >= 1:
             avg_path_length = nx.average_shortest_path_length(wcomps[0])
             try:
                 avg_weight_path_length = nx.average_shortest_path_length(wcomps[0],weighted = True)

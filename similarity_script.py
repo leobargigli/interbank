@@ -11,7 +11,7 @@ from numpy import intersect1d,minimum,maximum,delete,savetxt,zeros,loadtxt
 from networkx import to_numpy_matrix
 
 USAGE = "%prog (date) (location) (rapporto) (maturity)"
-USE_DESCRIPTION = "date is YYYYMMDD. \n location is 'dom', 'tot_adj' or 'tot_unadj'.\n rapporto is 'SECURED', 'UNSECURED' or 'SEC+UNSEC'. \n maturity is 'overnight', 'longterm' or 'OVN+LT'."
+USE_DESCRIPTION = "date is YYYYMMDD. \n location is 'dom', 'tot_adj' or 'tot_unadj'.\n rapporto is 'SECURED', 'UNSECURED' or 'TOT'. \n maturity is 'overnight', 'longterm', 'nonsignif' or 'TOT'."
 parser = OptionParser( USAGE , description= " " + USE_DESCRIPTION ) 
 parser.set_defaults( verbosity = None)
 
@@ -43,18 +43,56 @@ def main():
     dates = [j.replace('\r\n','') for j in dates]
     
     
-    select_dates = intersect1d(args,dates)
-    if len(select_dates) > 0:
-        dates = select_dates
-    select_rapporto = intersect1d(args,rapporto)
-    if len(select_rapporto) > 0:
-        rapporto = select_rapporto
-    select_maturity = intersect1d(args,maturity)
-    if len(select_maturity) > 0:
-        maturity = select_maturity
-    select_location = intersect1d(args,location)    
-    if len(select_location) > 0:
-        location = select_location
+#    select_dates = intersect1d(args,dates)
+    
+    for i in args:
+
+        select_dates = list()
+        try:
+            j = dates.index(i)
+            select_dates.append(dates[j])
+        except ValueError:
+            pass
+        if len(select_dates) > 0:
+            dates = select_dates
+
+        select_rapporto = list()
+        try:
+            j = rapporto.index(i)
+            select_rapporto.append(rapporto[j])
+        except ValueError:
+            pass
+        if len(select_rapporto) > 0:
+            rapporto = select_rapporto
+
+        select_maturity = list()
+        try:
+            j = maturity.index(i)
+            select_maturity.append(maturity[j])
+        except ValueError:
+            pass
+        if len(select_maturity) > 0:
+            maturity = select_maturity
+
+        select_location = list()
+        try:
+            j = location.index(i)
+            select_location.append(location[j])
+        except ValueError:
+            pass
+        if len(select_location) > 0:
+            location = select_location
+
+
+#    select_rapporto = intersect1d(args,rapporto)
+#    if len(select_rapporto) > 0:
+#        rapporto = select_rapporto
+#    select_maturity = intersect1d(args,maturity)
+#    if len(select_maturity) > 0:
+#        maturity = select_maturity
+#    select_location = intersect1d(args,location)    
+#    if len(select_location) > 0:
+#        location = select_location
     
     print 'selected labels:'
     print dates, rapporto,maturity, location
@@ -69,7 +107,7 @@ def main():
             for i in rapporto:
                 G[k][h][i] = {}
                 for j in maturity:
-                    filename = k + '_' + h.split('_')[0] + '.edgelist'
+                    filename = k + '_' + h.split('_')[0] + '.npy'
                     try:
                         if h.find('tot_adj') is not -1:
                             reporters = k + '_reporters.csv'
