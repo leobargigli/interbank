@@ -13,38 +13,28 @@ class Year:
 
     def __init__(self, filename, delimiter = ',',
                  rapporto = 'TOT', 
-                 maturity = 'TOT', 
-                 dtype = 0):
+                 maturity = 'TOT'):
 
 
 
-        edgelist = np.load(filename)
-#        n = len(edgelist)
-
-        # this is to filter out according to natura_rapporto and maturity
-            
-#        for i in range(n):
-#            x = edgelist['natura_rapporto'][i]
-#            edgelist['natura_rapporto'][i] = x.split(' ')[1]
-        
-        if rapporto is 'SECURED' or rapporto is 'UNSECURED':
-            indices = np.where(edgelist['natura_rapporto'] == rapporto)
-            edgelist = edgelist[indices]
-            
-        if maturity is 'longterm' or maturity is 'overnight' or maturity is 'nonsignif':
-            indices = np.where(edgelist['maturity'] == maturity)
-            edgelist = edgelist[indices]
-            
-        ####
-        
-        reporters = np.unique(edgelist['source'])        
-        counterparts = np.unique(edgelist['dest'])
-        non_reporters = np.setdiff1d(counterparts,reporters)
-
-         # this is to clean fake domestic relations
-        
         try:
+            edgelist = np.load(filename)
+            if rapporto is 'SECURED' or rapporto is 'UNSECURED':
+                indices = np.where(edgelist['natura_rapporto'] == rapporto)
+                edgelist = edgelist[indices]
             
+            if maturity is 'longterm' or maturity is 'overnight' or maturity is 'nonsignif':
+                indices = np.where(edgelist['maturity'] == maturity)
+                edgelist = edgelist[indices]
+            
+            ####
+        
+            reporters = np.unique(edgelist['source'])        
+            counterparts = np.unique(edgelist['dest'])
+            non_reporters = np.setdiff1d(counterparts,reporters)
+
+             # this is to clean fake domestic relations
+        
             dom_indices = np.where(edgelist['location'] == 'domest')[0]
             
             for i in non_reporters:
@@ -53,19 +43,30 @@ class Year:
                 dom_nr = np.intersect1d(dom_indices,nr_indices)
                 edgelist = np.delete(edgelist,dom_nr,0)
         
-        except ValueError:
-            pass
-            
             
             # this is to treat foreign subsidiaries as a separate node
             
-        foreign_links = np.where(edgelist['location'] == 'estero')[0]
+            foreign_links = np.where(edgelist['location'] == 'estero')[0]
         
-        for i in foreign_links:
-            f_ctp =  edgelist[i]['dest']
-            chk_branch = np.intersect1d(reporters,f_ctp)
-            if len(chk_branch) > 0: 
-                edgelist[i]['dest'] += 'F'
+            for i in foreign_links:
+                f_ctp =  edgelist[i]['dest']
+                chk_branch = np.intersect1d(reporters,f_ctp)
+                if len(chk_branch) > 0: 
+                    edgelist[i]['dest'] += 'F'
+
+            
+        except IOError:
+            
+            edgetype = np.dtype([('source','|S10'),('dest','|S10'),('weight',np.float32)])
+            edgelist = np.loadtxt(filename,dtype = edgetype)
+#        n = len(edgelist)
+
+        # this is to filter out according to natura_rapporto and maturity
+            
+#        for i in range(n):
+#            x = edgelist['natura_rapporto'][i]
+#            edgelist['natura_rapporto'][i] = x.split(' ')[1]
+        
             
         # this is to sum weights across different link types
         
@@ -148,9 +149,18 @@ class Year:
         d = density(G , nbunch = nbunch)
         
         try:
-            volume = G.subgraph(nbunch).size(weight = 'weight') #self.Adj.sum()
+            volume = G.subgraph(nbunch).size(weight = 'weight')
         except TypeError:
             volume = G.subgraph(nbunch).size(weighted = True)
+        net_volume = volume - sum(self.Adj.diagonal())
+
+        try:
+            f_w_out = sum(G.out_degree(nbunch = self.for_subs, weight = 'weight').values())                        
+            f_w_in = sum(G.in_degree(nbunch = self.for_subs, weight = 'weight').values())
+        except AttributeError:
+            f_w_out = G.out_degree(nbunch = self.for_subs, weight = 'weight')                        
+            f_w_in = G.in_degree(nbunch = self.for_subs, weight = 'weight')
+            
         
         wcomps = nx.weakly_connected_component_subgraphs(G.subgraph(nbunch))
         wcomp_size = np.sort([i.number_of_nodes() for i in wcomps])[-1]
@@ -233,7 +243,10 @@ class Year:
         output.write('# of edges (net): %i\n'%edges) 
         output.write('# of selfloops: %i\n'%(len(selfloops))) 
         output.write('Density: %.4f\n'%d) 
-        output.write('Volume: %.2f\n'%volume) 
+        output.write('Volume: %.2f\n'%volume)
+        output.write('Volume (net): %.2f\n'%net_volume)
+        output.write('total out-strength of foreign branches: %.2f\n'%f_w_out)
+        output.write('total in -strength of foreign branches: %.2f\n'%f_w_in)
         output.write('Nodes in the largest weak component:% i\n'%wcomp_size)
         output.write('Nodes in the largest strong component:% i\n'%scomp_size)
         output.write('Average path length: %f\n'%avg_path_length) 
