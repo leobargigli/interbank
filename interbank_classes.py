@@ -111,7 +111,7 @@ class Year:
         try:
             self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
         except ValueError:
-            pass
+            self.Adj = csc_matrix(np.zeros((10,10)))
         self.filename = os.path.splitext(filename)[0]
         self.edgelist = edgelist
         self.rapporto = rapporto
@@ -158,8 +158,8 @@ class Year:
             f_w_out = sum(G.out_degree(nbunch = self.for_subs, weight = 'weight').values())                        
             f_w_in = sum(G.in_degree(nbunch = self.for_subs, weight = 'weight').values())
         except AttributeError:
-            f_w_out = G.out_degree(nbunch = self.for_subs, weight = 'weight')                        
-            f_w_in = G.in_degree(nbunch = self.for_subs, weight = 'weight')
+            f_w_out = sum(G.out_degree(nbunch = self.for_subs, weight = 'weight').values())                        
+            f_w_in = sum(G.in_degree(nbunch = self.for_subs, weight = 'weight').values())
             
         
         wcomps = nx.weakly_connected_component_subgraphs(G.subgraph(nbunch))
