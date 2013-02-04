@@ -8,6 +8,7 @@ Created on Tue Dec 11 11:42:34 2012
 import interbank_classes as bdi
 from optparse import OptionParser
 from numpy import intersect1d,minimum,maximum,delete,savetxt,zeros,loadtxt
+from numpy.random import shuffle
 from networkx import to_numpy_matrix
 
 USAGE = "%prog (date) (location) (rapporto) (maturity)"
@@ -125,6 +126,7 @@ def main():
     size = len(dates) * len(location) * len(rapporto) * len(maturity) 
     J = zeros((size,size))
     I = zeros((size,size))
+    P = zeros((size,size))
     
     links = zeros((size,))
     nodes = zeros((size,))
@@ -155,9 +157,17 @@ def main():
                                             #print len(row_nodes),len(col_nodes),len(nodelist)
                                             A = to_numpy_matrix(G[k][h][i][j], nodelist = nodelist, weight = None)
                                             B = to_numpy_matrix(G[kb][hb][ib][jb], nodelist = nodelist, weight = None)
+                                            A = A.flatten()
+                                            B = B.flatten()
                                             #print A.sum(),B.sum()
                                             J[n,m] = minimum(A,B).sum() / maximum(A,B).sum()
                                             I[n,m] = len(nodelist)
+                                            x = zeros((10**3,))
+                                            for i in range(10**3):
+                                                shuffle(B)
+                                                x[i] = minimum(A,B).sum() / maximum(A,B).sum()
+                                            P[n,m] = 1. - sum(x <= J[n,m]) / 10.**3
+                                                
                                         except AttributeError:
                                             col_to_delete.append(m)
                                         m += 1
@@ -175,6 +185,10 @@ def main():
     I = delete(I,to_delete,0)
     I = delete(I,to_delete,1)
     
+    P = delete(P,to_delete,0)
+    P = delete(P,to_delete,1)
+    
+    
     nodes = delete(nodes,to_delete)
     links = delete(links,to_delete)
 
@@ -188,6 +202,7 @@ def main():
         
     savetxt(filename + '.matrix',J,fmt = '%.4f')
     savetxt(filename + '.intersection',I,fmt = '%.4f')
+    savetxt(filename + '.pvalues',P,fmt = '%.4f')
     savetxt(filename + '.nodes',nodes,fmt = '%.4f')
     savetxt(filename + '.links',links,fmt = '%.4f')
     
