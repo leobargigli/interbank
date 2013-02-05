@@ -57,8 +57,12 @@ def main():
             for i in rapporto:
                 for j in maturity:
                     G = bdi.Year(filename, rapporto = i, maturity = j)                    
-                    gross_vol =  G.Adj.sum()
-                    net_vol = gross_vol - sum(G.Adj.diagonal())
+                    try:
+                        gross_vol =  G.Adj.sum()
+                        net_vol = gross_vol - sum(G.Adj.diagonal())
+                    except AttributeError:
+                        gross_vol = 0
+                        net_vol = 0
                     line = i + '_' + j + '\t' + str(gross_vol) + '\t' + str(net_vol) + '\r\n'
                     lines.append(line)
                     

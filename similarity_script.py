@@ -130,9 +130,9 @@ def main():
     
     links = zeros((size,))
     nodes = zeros((size,))
+        
+        #print 'values:'
     
-    #print 'values:'
-
     n = 0
     labels = list()
     row_to_delete = list()
@@ -163,9 +163,9 @@ def main():
                                             J[n,m] = minimum(A,B).sum() / maximum(A,B).sum()
                                             I[n,m] = len(nodelist)
                                             x = zeros((10**3,))
-                                            for i in range(10**3):
+                                            for q in range(10**3):
                                                 shuffle(B)
-                                                x[i] = minimum(A,B).sum() / maximum(A,B).sum()
+                                                x[q] = minimum(A,B).sum() / maximum(A,B).sum()
                                             P[n,m] = 1. - sum(x <= J[n,m]) / 10.**3
                                                 
                                         except AttributeError:

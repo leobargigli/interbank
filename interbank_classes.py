@@ -111,7 +111,7 @@ class Year:
         try:
             self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
         except ValueError:
-            self.Adj = csc_matrix(np.zeros((10,10)))
+            pass
         self.filename = os.path.splitext(filename)[0]
         self.edgelist = edgelist
         self.rapporto = rapporto
