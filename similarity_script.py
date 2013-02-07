@@ -169,16 +169,16 @@ def main():
                                                 x[q] = dot(A,B) / norm(A) / norm(B)
                                             PC[n,m] = 1. - sum(x <= C[n,m]) / 10.**3
                                             
-                                            A = A > 0
-                                            B = B > 0
+                                            #A = A > 0
+                                            #B = B > 0
                                             #print A.sum(),B.sum()
-                                            J[n,m] = minimum(A,B).sum() / maximum(A,B).sum()
+                                            #J[n,m] = minimum(A,B).sum() / maximum(A,B).sum()
                                             I[n,m] = len(nodelist)
-                                            x = zeros((10**3,))
-                                            for q in range(10**3):
-                                                shuffle(B)
-                                                x[q] = minimum(A,B).sum() / maximum(A,B).sum()
-                                            PJ[n,m] = 1. - sum(x <= J[n,m]) / 10.**3
+                                            #x = zeros((10**3,))
+                                            #for q in range(10**3):
+                                            #    shuffle(B)
+                                            #    x[q] = minimum(A,B).sum() / maximum(A,B).sum()
+                                            #PJ[n,m] = 1. - sum(x <= J[n,m]) / 10.**3
                                                 
                                         except AttributeError:
                                             col_to_delete.append(m)
@@ -191,8 +191,8 @@ def main():
     to_delete = intersect1d(row_to_delete,col_to_delete)    
     #print 'deleted row / cols: ' + str(len(to_delete))
     
-    J = delete(J,to_delete,0)
-    J = delete(J,to_delete,1)
+    #J = delete(J,to_delete,0)
+    #J = delete(J,to_delete,1)
 
     I = delete(I,to_delete,0)
     I = delete(I,to_delete,1)
@@ -200,8 +200,8 @@ def main():
     C = delete(I,to_delete,0)
     C = delete(I,to_delete,1)
     
-    PJ = delete(PJ,to_delete,0)
-    PJ = delete(PJ,to_delete,1)
+    #PJ = delete(PJ,to_delete,0)
+    #PJ = delete(PJ,to_delete,1)
 
     PC = delete(PC,to_delete,0)
     PC = delete(PC,to_delete,1)
@@ -219,9 +219,9 @@ def main():
         filename += 'total'
         
     savetxt(filename + '.jmatrix',J,fmt = '%.4f')
-    savetxt(filename + '.wmatrix',J,fmt = '%.4f')
+    #savetxt(filename + '.wmatrix',J,fmt = '%.4f')
     savetxt(filename + '.intersection',I,fmt = '%.4f')
-    savetxt(filename + '.jpvalues',PJ,fmt = '%.4f')
+    #savetxt(filename + '.jpvalues',PJ,fmt = '%.4f')
     savetxt(filename + '.wpvalues',PC,fmt = '%.4f')
     savetxt(filename + '.nodes',nodes,fmt = '%.4f')
     savetxt(filename + '.links',links,fmt = '%.4f')
