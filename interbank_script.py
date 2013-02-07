@@ -47,12 +47,30 @@ def main():
         label = ''
 
     if opts.rapporto is None:
-        opts.rapporto = 'total'
+        opts.rapporto = 'TOT'
     
     if opts.maturity is None:
-        opts.maturity = 'total'
+        opts.maturity = 'TOT'
 
+    rapporto = [
+    'SECURED',
+    'UNSECURED',
+    'TOT']
+        
+    maturity = [
+    'overnight',
+    'longterm',
+    'nonsignif',
+    'TOT']
+
+    for i in rapporto:
+        if i == opts.rapporto:
+            opts.rapporto = i
     
+    for i in maturity:
+        if i == opts.maturity:
+            opts.maturity = i
+
     Y = Year(filename,
              rapporto = opts.rapporto, 
              maturity = opts.maturity)
