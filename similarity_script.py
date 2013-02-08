@@ -163,11 +163,11 @@ def main():
                                             A = array(A).flatten()
                                             B = array(B).flatten()
                                             C[n,m] = dot(A,B) / norm(A) / norm(B)
-                                            x = zeros((10**3,))
-                                            for q in range(10**3):
-                                                shuffle(B)
-                                                x[q] = dot(A,B) / norm(A) / norm(B)
-                                            PC[n,m] = 1. - sum(x <= C[n,m]) / 10.**3
+                                            #x = zeros((10**3,))
+                                            #for q in range(10**3):
+                                            #    shuffle(B)
+                                            #    x[q] = dot(A,B) / norm(A) / norm(B)
+                                            #PC[n,m] = 1. - sum(x <= C[n,m]) / 10.**3
                                             
                                             #A = A > 0
                                             #B = B > 0
@@ -203,8 +203,8 @@ def main():
     #PJ = delete(PJ,to_delete,0)
     #PJ = delete(PJ,to_delete,1)
 
-    PC = delete(PC,to_delete,0)
-    PC = delete(PC,to_delete,1)
+    #PC = delete(PC,to_delete,0)
+    #PC = delete(PC,to_delete,1)
     
     
     nodes = delete(nodes,to_delete)
