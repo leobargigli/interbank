@@ -162,7 +162,12 @@ def main():
                                             B = to_numpy_matrix(G[kb][hb][ib][jb], nodelist = nodelist, weight = 'weight')
                                             A = array(A).flatten()
                                             B = array(B).flatten()
-                                            C[n,m] = dot(A,B) / norm(A) / norm(B)
+                                            normA = norm(A)
+                                            normB = norm(B)
+                                            if normA > 0 and normB > 0:
+                                                C[n,m] = dot(A,B) / normA / normB
+                                            else:
+                                                C[n,m] = 0.
                                             #x = zeros((10**3,))
                                             #for q in range(10**3):
                                             #    shuffle(B)
