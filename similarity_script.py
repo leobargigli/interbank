@@ -162,12 +162,14 @@ def main():
                                             B = to_numpy_matrix(G[kb][hb][ib][jb], nodelist = nodelist, weight = 'weight')
                                             A = array(A).flatten()
                                             B = array(B).flatten()
-                                            normA = norm(A)
-                                            normB = norm(B)
-                                            if normA > 0 and normB > 0:
-                                                C[n,m] = dot(A,B) / normA / normB
+                                            
+                                            N = norm(B) * norm(A)
+                                            print dot(A,B),N
+                                            if N > 0:
+                                                C[n,m] = dot(A,B) / N
                                             else:
                                                 C[n,m] = 0.
+                                            print C[n,m]
                                             #x = zeros((10**3,))
                                             #for q in range(10**3):
                                             #    shuffle(B)
@@ -178,7 +180,7 @@ def main():
                                             #B = B > 0
                                             #print A.sum(),B.sum()
                                             #J[n,m] = minimum(A,B).sum() / maximum(A,B).sum()
-                                            I[n,m] = len(nodelist)
+                                            #I[n,m] = len(nodelist)
                                             #x = zeros((10**3,))
                                             #for q in range(10**3):
                                             #    shuffle(B)
@@ -202,8 +204,8 @@ def main():
     I = delete(I,to_delete,0)
     I = delete(I,to_delete,1)
 
-    C = delete(I,to_delete,0)
-    C = delete(I,to_delete,1)
+    C = delete(C,to_delete,0)
+    C = delete(C,to_delete,1)
     
     #PJ = delete(PJ,to_delete,0)
     #PJ = delete(PJ,to_delete,1)
@@ -223,17 +225,17 @@ def main():
     else:
         filename += 'total'
         
-    savetxt(filename + '.jmatrix',J,fmt = '%.4f')
+    savetxt(filename + '.wmatrix',C,fmt = '%.4f')
     #savetxt(filename + '.wmatrix',J,fmt = '%.4f')
-    savetxt(filename + '.intersection',I,fmt = '%.4f')
+    #savetxt(filename + '.intersection',I,fmt = '%.4f')
     #savetxt(filename + '.jpvalues',PJ,fmt = '%.4f')
-    savetxt(filename + '.wpvalues',PC,fmt = '%.4f')
-    savetxt(filename + '.nodes',nodes,fmt = '%.4f')
-    savetxt(filename + '.links',links,fmt = '%.4f')
+    #savetxt(filename + '.wpvalues',PC,fmt = '%.4f')
+    #savetxt(filename + '.nodes',nodes,fmt = '%.4f')
+    #savetxt(filename + '.links',links,fmt = '%.4f')
     
-    output = open(filename + '.labels','wb')
-    output.writelines(labels)
-    output.flush()    
+    #output = open(filename + '.labels','wb')
+    #output.writelines(labels)
+    #output.flush()    
     
     #print 'shape of similarity matrix:'
     #print J.shape
