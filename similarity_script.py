@@ -45,8 +45,6 @@ def main():
     dates = [j.replace('\r\n','') for j in dates]
     
     
-#    select_dates = intersect1d(args,dates)
-    
     for i in args:
 
         select_dates = list()
@@ -86,16 +84,7 @@ def main():
             location = select_location
 
 
-#    select_rapporto = intersect1d(args,rapporto)
-#    if len(select_rapporto) > 0:
-#        rapporto = select_rapporto
-#    select_maturity = intersect1d(args,maturity)
-#    if len(select_maturity) > 0:
-#        maturity = select_maturity
-#    select_location = intersect1d(args,location)    
-#    if len(select_location) > 0:
-#        location = select_location
-    
+
     print 'selected labels:'
     print dates, rapporto,maturity, location
     
@@ -126,9 +115,11 @@ def main():
 
     size = len(dates) * len(location) * len(rapporto) * len(maturity) 
     J = zeros((size,size))
+    JT = zeros((size,size))
     I = zeros((size,size))
     PJ = zeros((size,size))
     C = zeros((size,size))
+    CT = zeros((size,size))
     PC = zeros((size,size))
     
     links = zeros((size,))
@@ -164,20 +155,24 @@ def main():
                                             B = array(B).flatten()
                                             
                                             N = norm(B) * norm(A)
-                                            print dot(A,B),N
+                                            #print dot(A,B),N
                                             if N > 0:
                                                 C[n,m] = dot(A,B) / N
+                                                CT[n,m] = dot(A,B.T) / N
                                             else:
                                                 C[n,m] = 0.
-                                            print C[n,m]
+                                                CT[n,m] = 0.
+                                                
+                                            #print C[n,m]
                                             #x = zeros((10**3,))
                                             #for q in range(10**3):
                                             #    shuffle(B)
                                             #    x[q] = dot(A,B) / norm(A) / norm(B)
                                             #PC[n,m] = 1. - sum(x <= C[n,m]) / 10.**3
                                             
-                                            #A = A > 0
-                                            #B = B > 0
+                                            A = A > 0
+                                            B = B > 0
+                                            JT[n,m] = minimum(A,B.T).sum() / maximum(A,B.T).sum()
                                             #print A.sum(),B.sum()
                                             #J[n,m] = minimum(A,B).sum() / maximum(A,B).sum()
                                             #I[n,m] = len(nodelist)
@@ -201,11 +196,18 @@ def main():
     #J = delete(J,to_delete,0)
     #J = delete(J,to_delete,1)
 
-    I = delete(I,to_delete,0)
-    I = delete(I,to_delete,1)
+    JT = delete(JT,to_delete,0)
+    JT = delete(JT,to_delete,1)
+
+    #I = delete(I,to_delete,0)
+    #I = delete(I,to_delete,1)
 
     C = delete(C,to_delete,0)
     C = delete(C,to_delete,1)
+
+    CT = delete(C,to_delete,0)
+    CT = delete(C,to_delete,1)
+
     
     #PJ = delete(PJ,to_delete,0)
     #PJ = delete(PJ,to_delete,1)
@@ -226,7 +228,9 @@ def main():
         filename += 'total'
         
     savetxt(filename + '.wmatrix',C,fmt = '%.4f')
-    #savetxt(filename + '.wmatrix',J,fmt = '%.4f')
+    savetxt(filename + '.wmatrix',CT,fmt = '%.4f')
+    savetxt(filename + '.jTmatrix',JT,fmt = '%.4f')
+    #savetxt(filename + '.jmatrix',J,fmt = '%.4f')
     #savetxt(filename + '.intersection',I,fmt = '%.4f')
     #savetxt(filename + '.jpvalues',PJ,fmt = '%.4f')
     #savetxt(filename + '.wpvalues',PC,fmt = '%.4f')

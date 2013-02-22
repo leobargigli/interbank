@@ -128,26 +128,26 @@ def main():
             labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
             scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
 
-        indices = np.where(x == 0)
-        x = np.delete(x, indices)
-        x = list(x)
+#        indices = np.where(x == 0)
+#        x = np.delete(x, indices)
+#        x = list(x)
         
-        try:
-            alpha,xmin,ntail = plfit(x)
-        except ValueError:
-            pass
-        try:
-            h = plplot(x,xmin,alpha, ntail, i, opts.rapporto + opts.maturity + Y.filename + label, format = img)
-            output.write('estimated exponent of %s distribution: %.2f\n'%(i, alpha))
-            output.write('# datapoints in the tail of %s distribution: %i\n'%(i , ntail))
-            output.write('min %s value in the tail: %.2f\n'%(i, xmin))
-
-        except TypeError:
-            pass
-        except UnboundLocalError:
-            pass
-        except ValueError:
-            pass
+#        try:
+#            alpha,xmin,ntail = plfit(x)
+#        except ValueError:
+#            pass
+#        try:
+#            h = plplot(x,xmin,alpha, ntail, i, opts.rapporto + opts.maturity + Y.filename + label, format = img)
+#            output.write('estimated exponent of %s distribution: %.2f\n'%(i, alpha))
+#            output.write('# datapoints in the tail of %s distribution: %i\n'%(i , ntail))
+#            output.write('min %s value in the tail: %.2f\n'%(i, xmin))
+#
+#        except TypeError:
+#            pass
+#        except UnboundLocalError:
+#            pass
+#        except ValueError:
+#            pass
     
     options = [
         ('out',True,0),
@@ -165,7 +165,9 @@ def main():
             labeldict = {True: 'inverse degree', False: 'weight'}
             ydict = {True: r'$1 / k$', False : ''} 
             labels = [ydict[j],r'Part. ratio',r'Participation_ratio_vs_%s%s' % (i,labeldict[j])]
-            scatter(epart, part, labels, opts.rapporto + opts.maturity + Y.filename + label, diag = True,fmt = img)
+            scatter(epart, part, labels, 
+                    opts.rapporto + opts.maturity + Y.filename + label, 
+                    diag = True,fmt = img)
 
         except IndexError:
             pass
@@ -173,8 +175,12 @@ def main():
             pass
             
         
-    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename, format = img, nbunch = nodelist)
-    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename, format = img, nbunch = nodelist, directed = True)
+    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename,
+                    format = img, 
+                    nbunch = nodelist)
+    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename, 
+                    format = img, 
+                    nbunch = nodelist, directed = True)
     
     os.chdir('..')
         
