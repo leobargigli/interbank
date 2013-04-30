@@ -30,7 +30,7 @@ parser.add_option( "--rapporto", '--r',
 
 def main():
     ( opts , args ) = parser.parse_args()
-    __validate_opts_and_args( opts , args )
+    #__validate_opts_and_args( opts , args )
     filename = args[0]
 
     if opts.nodelist:
@@ -43,8 +43,8 @@ def main():
         nodelist = None
         label = '_unadj'
     
-    if filename.find('dom') <> -1:
-        label = ''
+    #if filename.find('dom') <> -1:
+    #    label = ''
 
     if opts.rapporto is None:
         opts.rapporto = 'TOT'
@@ -187,19 +187,19 @@ def main():
     
   
     
-    
-def __validate_opts_and_args( opts , args ):
-    """Makes sure that one file has been passed and that it exists.
-    """
-    if len(args)<1:
-        parser.print_help()
-        sys.exit( 1 )
-    if not os.path.exists( args[0] ): 
-        parser.print_help()
-        sys.stderr.write( "FILE {0} DOES NOT EXISTS\n".format(args[0]) )
-        sys.exit( 1 )
-
-if __name__ == "__main__":
-    main()
+#    
+#def __validate_opts_and_args( opts , args ):
+#    """Makes sure that one file has been passed and that it exists.
+#    """
+#    if len(args)<1:
+#        parser.print_help()
+#        sys.exit( 1 )
+#    if not os.path.exists( args[0] ): 
+#        parser.print_help()
+#        sys.stderr.write( "FILE {0} DOES NOT EXISTS\n".format(args[0]) )
+#        sys.exit( 1 )
+#
+#if __name__ == "__main__":
+#    main()
 
 

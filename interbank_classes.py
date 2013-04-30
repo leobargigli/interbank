@@ -15,8 +15,6 @@ class Year:
                  rapporto = 'TOT', 
                  maturity = 'TOT'):
 
-
-
         try:
             edgelist = np.load(filename)
             if rapporto is 'SECURED' or rapporto is 'UNSECURED':
@@ -29,43 +27,36 @@ class Year:
             
             ####
         
-            reporters = np.unique(edgelist['source'])        
-            counterparts = np.unique(edgelist['dest'])
-            non_reporters = np.setdiff1d(counterparts,reporters)
-
-             # this is to clean fake domestic relations
-        
-            dom_indices = np.where(edgelist['location'] == 'domest')[0]
-            
-            for i in non_reporters:
-            
-                nr_indices = np.where(edgelist['dest'] == i)[0]
-                dom_nr = np.intersect1d(dom_indices,nr_indices)
-                edgelist = np.delete(edgelist,dom_nr,0)
+#            reporters = np.unique(edgelist['source'])        
+#            counterparts = np.unique(edgelist['dest'])
+#            non_reporters = np.setdiff1d(counterparts,reporters)
+#
+#             # this is to clean fake domestic relations
+#        
+#            dom_indices = np.where(edgelist['location'] == 'domest')[0]
+#            
+#            for i in non_reporters:
+#            
+#                nr_indices = np.where(edgelist['dest'] == i)[0]
+#                dom_nr = np.intersect1d(dom_indices,nr_indices)
+#                edgelist = np.delete(edgelist,dom_nr,0)
         
             
             # this is to treat foreign subsidiaries as a separate node
             
-            foreign_links = np.where(edgelist['location'] == 'estero')[0]
-        
-            for i in foreign_links:
-                f_ctp =  edgelist[i]['dest']
-                chk_branch = np.intersect1d(reporters,f_ctp)
-                if len(chk_branch) > 0: 
-                    edgelist[i]['dest'] += 'F'
+#            foreign_links = np.where(edgelist['location'] == 'estero')[0]
+#        
+#            for i in foreign_links:
+#                f_ctp =  edgelist[i]['dest']
+#                chk_branch = np.intersect1d(reporters,f_ctp)
+#                if len(chk_branch) > 0: 
+#                    edgelist[i]['dest'] += 'F'
 
             
         except IOError:
             
             edgetype = np.dtype([('source','|S10'),('dest','|S10'),('weight',np.float32)])
             edgelist = np.loadtxt(filename,dtype = edgetype)
-#        n = len(edgelist)
-
-        # this is to filter out according to natura_rapporto and maturity
-            
-#        for i in range(n):
-#            x = edgelist['natura_rapporto'][i]
-#            edgelist['natura_rapporto'][i] = x.split(' ')[1]
         
             
         # this is to sum weights across different link types
@@ -94,10 +85,10 @@ class Year:
         nodes = np.array((np.sort(G.nodes())),dtype = '|S10')
 
         # this is to list foreign subsidiaries of domestic groups
-        for_subs = list()        
-        for i in nodes:
-            if i.find('F')<> -1:
-                for_subs.append(i)
+#        for_subs = list()        
+#        for i in nodes:
+#            if i.find('F')<> -1:
+#                for_subs.append(i)
 
         if rapporto is None:
             rapporto = ''
@@ -107,7 +98,7 @@ class Year:
 
         self.Net = G
         self.nodes = nodes
-        self.for_subs = np.array(for_subs)
+#        self.for_subs = np.array(for_subs)
         try:
             self.Adj = csc_matrix(nx.to_numpy_matrix(G, nodelist = self.nodes))
         except ValueError:
@@ -133,13 +124,13 @@ class Year:
         else:
             label = '_unadj'
             
-        if  self.filename.find('dom') <>-1:
-            label = ''
+        #if  self.filename.find('dom') <>-1:
+        #    label = ''
             
         G = self.Net
         
         if nbunch is None:
-            nbunch = G.nodes()
+            nbunch = sort(G.nodes())
             
         nodes = len(nbunch)
         for_subs = len(self.for_subs)
@@ -222,6 +213,7 @@ class Year:
     
         dC = np.average(dir_clustering_coefficient(G, nbunch = nbunch)[0])
         uC = np.average(clustering_coefficient(G, nbunch = nbunch)[0])
+        triangles = sum(nx.triangles(G.to_undirected(),nodes = nbunch).values())
         
         if len(wcomps) >= 1:
             avg_path_length = nx.average_shortest_path_length(wcomps[0])
@@ -271,6 +263,8 @@ class Year:
         output.write('(p-value): (%.4f)\n'%w_recip[1])
         output.write('Average directed clustering: %.4f\n'%dC) 
         output.write('Average undirected clustering: %.4f\n'%uC) 
+        output.write('# Undirected triangles: %.4f\n'%triangles) 
+
         
         if out_tau is not None and out_p is not None:
             output.write('Kendall tau w_out / d_out vs d_out: %.4f \n' % out_tau)

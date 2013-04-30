@@ -51,6 +51,8 @@ def main():
         edgelist = loadtxt(filename, delimiter = ';',dtype = edgetype)
         
     dates = unique(edgelist['date'])
+    savetxt('dates.csv',dates,fmt ='%s')
+    
 
     for i in dates:
         
@@ -58,8 +60,9 @@ def main():
         indices = where(edgelist['date'] == i)
         y_edgelist = edgelist[indices]
         reporters = unique(y_edgelist['source'])
-        print i + '_reporters:' + str(len(reporters))
+        print i + '_totreporters:' + str(len(reporters))
         savetxt(reporterfile,reporters,fmt ='%s')
+        
     
     
     if opts.domestic == 1:

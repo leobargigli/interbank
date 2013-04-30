@@ -7,10 +7,11 @@ Created on Tue Dec 11 11:42:34 2012
 
 import interbank_classes as bdi
 from optparse import OptionParser
-from numpy import intersect1d,minimum,maximum,delete,savetxt,zeros,loadtxt,dot,array
+from numpy import intersect1d,minimum,maximum,delete,savetxt,zeros,loadtxt,dot,array,diag_indices_from
 from numpy.random import shuffle
 from numpy.linalg import norm
 from networkx import to_numpy_matrix
+import os
 
 USAGE = "%prog (date) (location) (rapporto) (maturity)"
 USE_DESCRIPTION = "date is YYYYMMDD. \n location is 'dom', 'tot_adj' or 'tot_unadj'.\n rapporto is 'SECURED', 'UNSECURED' or 'TOT'. \n maturity is 'overnight', 'longterm', 'nonsignif' or 'TOT'."
@@ -38,11 +39,13 @@ def main():
     'tot_adj',
     'tot_unadj']
     
-    dates = open('date.csv', 'r')
+    dates = open('dates.csv', 'r')
     dates = dates.readlines()
-    dates.pop(0)
+    #dates.pop(0)
     dates = [j.replace('"','') for j in dates]
-    dates = [j.replace('\r\n','') for j in dates]
+    dates = [j.replace('\n','') for j in dates]
+    #dates = [j.replace('\r','') for j in dates]
+    print dates
     
     
     for i in args:
@@ -149,16 +152,37 @@ def main():
                                             col_nodes = G[kb][hb][ib][jb].nodes()
                                             nodelist = intersect1d(row_nodes,col_nodes)
                                             #print len(row_nodes),len(col_nodes),len(nodelist)
+                                            A = to_numpy_matrix(G[k][h][i][j], weight = 'weight')
+                                            B = to_numpy_matrix(G[kb][hb][ib][jb], weight = 'weight')
+                                            indices = diag_indices_from(A)
+                                            A[indices] = 0
+                                            indices = diag_indices_from(B)
+                                            B[indices] = 0
+
+                                            FN = norm(B) * norm(A)
+                                            try:
+                                                BN = (1. * (A > 0)).sum() + (1. * (B > 0)).sum()
+                                            except TypeError:
+                                                BN = 0
+
                                             A = to_numpy_matrix(G[k][h][i][j], nodelist = nodelist, weight = 'weight')
                                             B = to_numpy_matrix(G[kb][hb][ib][jb], nodelist = nodelist, weight = 'weight')
+                                            #print 'B is symmetric: ' + str((B == B.T).min()) 
+                                            
+                                            indices = diag_indices_from(A)
+                                            A[indices] = 0
+                                            B[indices] = 0
+                                            
                                             A = array(A).flatten()
+                                            BT = array(B.T).flatten()
                                             B = array(B).flatten()
                                             
-                                            N = norm(B) * norm(A)
+                                            
+
                                             #print dot(A,B),N
-                                            if N > 0:
-                                                C[n,m] = dot(A,B) / N
-                                                CT[n,m] = dot(A,B.T) / N
+                                            if FN > 0:
+                                                C[n,m] = dot(A,B) / FN
+                                                CT[n,m] = dot(A,BT) / FN
                                             else:
                                                 C[n,m] = 0.
                                                 CT[n,m] = 0.
@@ -170,12 +194,29 @@ def main():
                                             #    x[q] = dot(A,B) / norm(A) / norm(B)
                                             #PC[n,m] = 1. - sum(x <= C[n,m]) / 10.**3
                                             
-                                            A = A > 0
-                                            B = B > 0
-                                            JT[n,m] = minimum(A,B.T).sum() / maximum(A,B.T).sum()
+                                            A = 1. * (A > 0)
+                                            BT = 1. * (BT > 0)
+                                            B = 1. * (B > 0)
+                                            
+                                            if BN > 0:
+                                                BTN = BN - (A*BT).sum()
+                                                try:
+                                                    JT[n,m] = (A * BT).sum() / BTN
+                                                except TypeError:
+                                                    JT[n,m] = 0
+                                            else:
+                                                JT[n,m] = 0
                                             #print A.sum(),B.sum()
-                                            #J[n,m] = minimum(A,B).sum() / maximum(A,B).sum()
-                                            #I[n,m] = len(nodelist)
+                                            if BN > 0:
+                                                BN -= (A*B).sum()
+                                                try:
+                                                    J[n,m] = (A * B).sum() / BN
+                                                except TypeError:
+                                                    J[n,m] = 0
+                                                    
+                                            else:
+                                                J[n,m] = 0
+                                            I[n,m] = len(nodelist)
                                             #x = zeros((10**3,))
                                             #for q in range(10**3):
                                             #    shuffle(B)
@@ -193,20 +234,20 @@ def main():
     to_delete = intersect1d(row_to_delete,col_to_delete)    
     #print 'deleted row / cols: ' + str(len(to_delete))
     
-    #J = delete(J,to_delete,0)
-    #J = delete(J,to_delete,1)
+    J = delete(J,to_delete,0)
+    J = delete(J,to_delete,1)
 
     JT = delete(JT,to_delete,0)
     JT = delete(JT,to_delete,1)
 
-    #I = delete(I,to_delete,0)
-    #I = delete(I,to_delete,1)
+    I = delete(I,to_delete,0)
+    I = delete(I,to_delete,1)
 
     C = delete(C,to_delete,0)
     C = delete(C,to_delete,1)
 
-    CT = delete(C,to_delete,0)
-    CT = delete(C,to_delete,1)
+    CT = delete(CT,to_delete,0)
+    CT = delete(CT,to_delete,1)
 
     
     #PJ = delete(PJ,to_delete,0)
@@ -226,25 +267,32 @@ def main():
             filename += i
     else:
         filename += 'total'
+    
+    try:
+        os.chdir('similarity_results')
+    except OSError:
+        os.mkdir('similarity_results')
+        os.chdir('similarity_results')
         
+    
     savetxt(filename + '.wmatrix',C,fmt = '%.4f')
-    savetxt(filename + '.wmatrix',CT,fmt = '%.4f')
+    savetxt(filename + '.wTmatrix',CT,fmt = '%.4f')
     savetxt(filename + '.jTmatrix',JT,fmt = '%.4f')
-    #savetxt(filename + '.jmatrix',J,fmt = '%.4f')
-    #savetxt(filename + '.intersection',I,fmt = '%.4f')
+    savetxt(filename + '.jmatrix',J,fmt = '%.4f')
+    savetxt(filename + '.intersection',I,fmt = '%.4f')
     #savetxt(filename + '.jpvalues',PJ,fmt = '%.4f')
     #savetxt(filename + '.wpvalues',PC,fmt = '%.4f')
-    #savetxt(filename + '.nodes',nodes,fmt = '%.4f')
-    #savetxt(filename + '.links',links,fmt = '%.4f')
+    savetxt(filename + '.nodes',nodes,fmt = '%.4f')
+    savetxt(filename + '.links',links,fmt = '%.4f')
     
-    #output = open(filename + '.labels','wb')
-    #output.writelines(labels)
-    #output.flush()    
+    output = open(filename + '.labels','wb')
+    output.writelines(labels)
+    output.flush()    
     
     #print 'shape of similarity matrix:'
     #print J.shape
                                     
-
+    os.chdir('..')
                     
     
     
