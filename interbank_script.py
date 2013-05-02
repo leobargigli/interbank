@@ -33,6 +33,7 @@ def main():
     #__validate_opts_and_args( opts , args )
     filename = args[0]
 
+
     if opts.nodelist:
         nodelist = np.loadtxt(opts.nodelist, 
                               dtype = str,
@@ -61,6 +62,7 @@ def main():
     'overnight',
     'longterm',
     'nonsignif',
+    'medium',
     'TOT']
 
     for i in rapporto:
@@ -199,7 +201,7 @@ def main():
 #        sys.stderr.write( "FILE {0} DOES NOT EXISTS\n".format(args[0]) )
 #        sys.exit( 1 )
 #
-#if __name__ == "__main__":
-#    main()
+if __name__ == "__main__":
+    main()
 
 

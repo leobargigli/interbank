@@ -130,10 +130,9 @@ class Year:
         G = self.Net
         
         if nbunch is None:
-            nbunch = sort(G.nodes())
+            nbunch = np.sort(G.nodes())
             
         nodes = len(nbunch)
-        for_subs = len(self.for_subs)
         edges = G.subgraph(nbunch).number_of_edges()
         selfloops = G.subgraph(nbunch).selfloop_edges()
         edges = edges - len(selfloops)
@@ -145,13 +144,6 @@ class Year:
             volume = G.subgraph(nbunch).size(weighted = True)
         net_volume = volume - sum(self.Adj.diagonal())
 
-        try:
-            f_w_out = sum(G.out_degree(nbunch = self.for_subs, weight = 'weight').values())                        
-            f_w_in = sum(G.in_degree(nbunch = self.for_subs, weight = 'weight').values())
-        except AttributeError:
-            f_w_out = sum(G.out_degree(nbunch = self.for_subs, weight = 'weight').values())                        
-            f_w_in = sum(G.in_degree(nbunch = self.for_subs, weight = 'weight').values())
-            
         
         wcomps = nx.weakly_connected_component_subgraphs(G.subgraph(nbunch))
         wcomp_size = np.sort([i.number_of_nodes() for i in wcomps])[-1]
@@ -231,14 +223,11 @@ class Year:
         filename = self.filename + label + self.rapporto + self.maturity + '_stats.dat'
         output = open(filename, 'wb')
         output.write('# of nodes: %i\n'%nodes)
-        output.write('# of foreign subsidiaries: %i\n'%for_subs)
         output.write('# of edges (net): %i\n'%edges) 
         output.write('# of selfloops: %i\n'%(len(selfloops))) 
         output.write('Density: %.4f\n'%d) 
         output.write('Volume: %.2f\n'%volume)
         output.write('Volume (net): %.2f\n'%net_volume)
-        output.write('total out-strength of foreign branches: %.2f\n'%f_w_out)
-        output.write('total in -strength of foreign branches: %.2f\n'%f_w_in)
         output.write('Nodes in the largest weak component:% i\n'%wcomp_size)
         output.write('Nodes in the largest strong component:% i\n'%scomp_size)
         output.write('Average path length: %f\n'%avg_path_length) 
