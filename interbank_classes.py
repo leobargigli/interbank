@@ -17,11 +17,11 @@ class Year:
 
         try:
             edgelist = np.load(filename)
-            if rapporto is 'SECURED' or rapporto is 'UNSECURED':
+            if rapporto is not 'TOT':
                 indices = np.where(edgelist['natura_rapporto'] == rapporto)
                 edgelist = edgelist[indices]
             
-            if maturity is 'longterm' or maturity is 'overnight' or maturity is 'nonsignif':
+            if maturity is not 'TOT':
                 indices = np.where(edgelist['maturity'] == maturity)
                 edgelist = edgelist[indices]
             

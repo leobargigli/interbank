@@ -32,6 +32,7 @@ def main():
     'overnight',
     'longterm',
     'nonsignif',
+    'medium',
     'TOT']
     
     location = [
