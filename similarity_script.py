@@ -14,7 +14,7 @@ from networkx import to_numpy_matrix
 import os
 
 USAGE = "%prog (date) (location) (rapporto) (maturity)"
-USE_DESCRIPTION = "date is YYYYMMDD. \n location is 'dom', 'tot_adj' or 'tot_unadj'.\n rapporto is 'SECURED', 'UNSECURED' or 'TOT'. \n maturity is 'overnight', 'longterm', 'nonsignif' or 'TOT'."
+USE_DESCRIPTION = "date is YYYYMMDD. \n location is 'dom', 'tot_adj' or 'tot_unadj'.\n rapporto is 'SECURED', 'UNSECURED' or 'TOT'. \n maturity is 'overnight', 'medium', longterm', 'nonsignif' or 'TOT'."
 parser = OptionParser( USAGE , description= " " + USE_DESCRIPTION ) 
 parser.set_defaults( verbosity = None)
 
