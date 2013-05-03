@@ -27,7 +27,7 @@ class Year:
             
             ####
         
-#            reporters = np.unique(edgelist['source'])        
+            reporters = np.unique(edgelist['source'])        
 #            counterparts = np.unique(edgelist['dest'])
 #            non_reporters = np.setdiff1d(counterparts,reporters)
 #
