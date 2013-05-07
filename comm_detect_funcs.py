@@ -150,7 +150,7 @@ def Kmatrix(W):
     W_in = dia_matrix((in_strength,0),shape = (m,m))
 
     K = W_out * W * W_in
-    K = csc_matrix(K)
+    #K = csc_matrix(K)
 
     return K
 

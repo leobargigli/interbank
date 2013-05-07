@@ -8,10 +8,12 @@ Created on Tue Dec 11 11:42:34 2012
 import interbank_classes as bdi
 from optparse import OptionParser
 from numpy import intersect1d,minimum,maximum,delete,savetxt,zeros,loadtxt,dot,array,diag_indices_from
+from scipy.linalg import svd
 from numpy.random import shuffle
 from numpy.linalg import norm
-from networkx import to_numpy_matrix
+from networkx import to_numpy_matrix,weakly_connected_component_subgraphs
 import os
+from comm_detect_funcs import Kmatrix
 
 USAGE = "%prog (date) (location) (rapporto) (maturity)"
 USE_DESCRIPTION = "date is YYYYMMDD. \n location is 'dom', 'tot_adj' or 'tot_unadj'.\n rapporto is 'SECURED', 'UNSECURED' or 'TOT'. \n maturity is 'overnight', 'medium', longterm', 'nonsignif' or 'TOT'."
@@ -110,6 +112,21 @@ def main():
                             G[k][h][i][j] =  bdi.Year(filename, rapporto = i, maturity = j).Net.subgraph(nodelist)
                         else:
                             G[k][h][i][j] =  bdi.Year(filename,rapporto = i, maturity = j).Net
+                            comps = weakly_connected_component_subgraphs(G[k][h][i][j])
+                            if len(comps) > 0:
+                                W = to_numpy_matrix(comps[0])
+                                K = Kmatrix(W)
+                                sv = svd(K,0,0)
+                                try:
+                                    os.chdir('similarity_results')
+                                except OSError:
+                                    os.mkdir('similarity_results')
+                                    os.chdir('similarity_results')
+
+                                savetxt(k + h + i + j + '_svs',sv)
+                                os.chdir('..')
+                            
+                            
                     except AttributeError:
                         G[k][h][i][j] =  None
                     n += 1
@@ -184,16 +201,12 @@ def main():
                                             if FN > 0:
                                                 C[n,m] = dot(A,B) / FN
                                                 CT[n,m] = dot(A,BT) / FN
-                                            else:
-                                                C[n,m] = 0.
-                                                CT[n,m] = 0.
-                                                
-                                            #print C[n,m]
-                                            #x = zeros((10**3,))
-                                            #for q in range(10**3):
-                                            #    shuffle(B)
-                                            #    x[q] = dot(A,B) / norm(A) / norm(B)
-                                            #PC[n,m] = 1. - sum(x <= C[n,m]) / 10.**3
+                                                x = zeros((10**3,))
+                                                for q in range(10**3):
+                                                    print q
+                                                    shuffle(B)
+                                                    x[q] = dot(A,B) / FN
+                                                PC[n,m] = 1. - sum(x <= C[n,m]) / 10.**3
                                             
                                             A = 1. * (A > 0)
                                             BT = 1. * (BT > 0)
@@ -204,25 +217,22 @@ def main():
                                                 try:
                                                     JT[n,m] = (A * BT).sum() / BTN
                                                 except TypeError:
-                                                    JT[n,m] = 0
-                                            else:
-                                                JT[n,m] = 0
-                                            #print A.sum(),B.sum()
-                                            if BN > 0:
+                                                    pass
+
                                                 BN -= (A*B).sum()
                                                 try:
                                                     J[n,m] = (A * B).sum() / BN
                                                 except TypeError:
-                                                    J[n,m] = 0
+                                                    pass
+                                                x = zeros((10**3,))
+                                                for q in range(10**3):
+                                                    print q
+                                                    shuffle(B)
+                                                    x[q] = (A * B).sum() / BN
+                                                PJ[n,m] = 1. - sum(x <= J[n,m]) / 10.**3
                                                     
-                                            else:
-                                                J[n,m] = 0
                                             I[n,m] = len(nodelist)
-                                            #x = zeros((10**3,))
-                                            #for q in range(10**3):
-                                            #    shuffle(B)
-                                            #    x[q] = minimum(A,B).sum() / maximum(A,B).sum()
-                                            #PJ[n,m] = 1. - sum(x <= J[n,m]) / 10.**3
+
                                                 
                                         except AttributeError:
                                             col_to_delete.append(m)
@@ -251,11 +261,11 @@ def main():
     CT = delete(CT,to_delete,1)
 
     
-    #PJ = delete(PJ,to_delete,0)
-    #PJ = delete(PJ,to_delete,1)
+    PJ = delete(PJ,to_delete,0)
+    PJ = delete(PJ,to_delete,1)
 
-    #PC = delete(PC,to_delete,0)
-    #PC = delete(PC,to_delete,1)
+    PC = delete(PC,to_delete,0)
+    PC = delete(PC,to_delete,1)
     
     
     nodes = delete(nodes,to_delete)
@@ -269,20 +279,15 @@ def main():
     else:
         filename += 'total'
     
-    try:
-        os.chdir('similarity_results')
-    except OSError:
-        os.mkdir('similarity_results')
-        os.chdir('similarity_results')
         
-    
+    os.chdir('similarity_results')
     savetxt(filename + '.wmatrix',C,fmt = '%.4f')
     savetxt(filename + '.wTmatrix',CT,fmt = '%.4f')
     savetxt(filename + '.jTmatrix',JT,fmt = '%.4f')
     savetxt(filename + '.jmatrix',J,fmt = '%.4f')
     savetxt(filename + '.intersection',I,fmt = '%.4f')
-    #savetxt(filename + '.jpvalues',PJ,fmt = '%.4f')
-    #savetxt(filename + '.wpvalues',PC,fmt = '%.4f')
+    savetxt(filename + '.jpvalues',PJ,fmt = '%.4f')
+    savetxt(filename + '.wpvalues',PC,fmt = '%.4f')
     savetxt(filename + '.nodes',nodes,fmt = '%.4f')
     savetxt(filename + '.links',links,fmt = '%.4f')
     
