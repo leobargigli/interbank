@@ -7,7 +7,7 @@ Created on Tue Dec 11 11:42:34 2012
 
 import interbank_classes as bdi
 from optparse import OptionParser
-from numpy import intersect1d,minimum,maximum,delete,savetxt,zeros,loadtxt,dot,array,diag_indices_from
+from numpy import intersect1d,savetxt,zeros,loadtxt,dot,array,diag_indices_from,tril_indices_from
 from scipy.linalg import svd
 from numpy.random import shuffle
 from numpy.linalg import norm
@@ -48,7 +48,15 @@ def main():
     dates = [j.replace('"','') for j in dates]
     dates = [j.replace('\n','') for j in dates]
     #dates = [j.replace('\r','') for j in dates]
-    print dates
+    #print dates
+
+    foldername = ''
+
+    if len(args) > 0:
+        for i in args:
+            foldername += i
+    else:
+        foldername += 'total'
     
     
     for i in args:
@@ -70,6 +78,8 @@ def main():
             pass
         if len(select_rapporto) > 0:
             rapporto = select_rapporto
+        if len(rapporto) > 1:
+            rapporto = [j for j in rapporto if j <> 'TOT']            
 
         select_maturity = list()
         try:
@@ -79,6 +89,8 @@ def main():
             pass
         if len(select_maturity) > 0:
             maturity = select_maturity
+        if len(maturity) > 1:
+            maturity = [j for j in maturity if j <> 'TOT']            
 
         select_location = list()
         try:
@@ -91,212 +103,189 @@ def main():
 
 
 
-    print 'selected labels:'
-    print dates, rapporto,maturity, location
-    
-    
     G = {}
-    n = 0    
+    labels = list()
+
     for k in dates:
-        G[k] = {}
         for h in location:
-            G[k][h] = {}
             for i in rapporto:
-                G[k][h][i] = {}
                 for j in maturity:
                     filename = k + '_' + h.split('_')[0] + '.npy'
                     try:
                         if h.find('tot_adj') is not -1:
                             reporters = k + '_reporters.csv'
                             nodelist = loadtxt(reporters,dtype = str, delimiter = ',')
-                            G[k][h][i][j] =  bdi.Year(filename, rapporto = i, maturity = j).Net.subgraph(nodelist)
+                            G[k + h + i + j] =  bdi.Year(filename, rapporto = i, maturity = j).Net.subgraph(nodelist)
                         else:
-                            G[k][h][i][j] =  bdi.Year(filename,rapporto = i, maturity = j).Net
-                            comps = weakly_connected_component_subgraphs(G[k][h][i][j])
+                            G[k + h + i + j] =  bdi.Year(filename,rapporto = i, maturity = j).Net
+                            comps = weakly_connected_component_subgraphs(G[k + h + i + j])
                             if len(comps) > 0:
                                 W = to_numpy_matrix(comps[0])
                                 K = Kmatrix(W)
                                 sv = svd(K,0,0)
                                 try:
-                                    os.chdir('similarity_results')
+                                    os.chdir('similarity_results' + foldername)
                                 except OSError:
-                                    os.mkdir('similarity_results')
-                                    os.chdir('similarity_results')
+                                    os.mkdir('similarity_results' + foldername)
+                                    os.chdir('similarity_results' + foldername)
 
                                 savetxt(k + h + i + j + '_svs',sv)
                                 os.chdir('..')
                             
-                            
+                        labels.append(k + h + i + j)
                     except AttributeError:
-                        G[k][h][i][j] =  None
-                    n += 1
-                    
+                        pass
     
+    to_remove = [
+    'SECUREDovernight',
+    'SECUREDlongterm',
+    ]
+    
+    for i in to_remove:
+        labels = [j for j in labels if j.find(i) == -1]
+        
+    n = len(labels) 
+   
     print 'number of combinations: ' + str(n)
+    
+    print 'selected labels:'
+    print labels
+    
+    I = zeros((n,n))
+    J = zeros((n,n))
+    PJ = zeros((n,n))
+    JT = zeros((n,n))
+    PJT = zeros((n,n))
+    C = zeros((n,n))
+    PC = zeros((n,n))
+    CT = zeros((n,n))
+    PCT = zeros((n,n))    
+    
+    links = zeros((n,))
+    nodes = zeros((n,))
+    
+    r = n * (n - 1) / 2. + n 
+    for k in range(n):
+        try:
+            x = labels[k]
+            row_nodes = G[x].nodes()
+            nodes[k] = len(row_nodes)
+            links[k] = G[x].number_of_edges()
+            for h in range(k,n):
+                try:
+                    y = labels[h]
+                    col_nodes = G[y].nodes()
+                    nodelist = intersect1d(row_nodes,col_nodes)
+                    A = to_numpy_matrix(G[x], weight = 'weight')
+                    B = to_numpy_matrix(G[y], weight = 'weight')
+                    indices = diag_indices_from(A)
+                    A[indices] = 0
+                    indices = diag_indices_from(B)
+                    B[indices] = 0
 
-    size = len(dates) * len(location) * len(rapporto) * len(maturity) 
-    J = zeros((size,size))
-    JT = zeros((size,size))
-    I = zeros((size,size))
-    PJ = zeros((size,size))
-    C = zeros((size,size))
-    CT = zeros((size,size))
-    PC = zeros((size,size))
-    
-    links = zeros((size,))
-    nodes = zeros((size,))
-        
-        #print 'values:'
-    
-    n = 0
-    labels = list()
-    row_to_delete = list()
-    col_to_delete = list()
-    for k in dates:
-        for h in location:
-            for i in rapporto:
-                for j in maturity:
+                    FN = norm(B) * norm(A)
                     try:
-                        row_nodes = G[k][h][i][j].nodes()
-                        labels.append(k + h + i + j + '\n')
-                        m = 0
-                        nodes[n] = len(row_nodes)
-                        links[n] = G[k][h][i][j].number_of_edges()
-                        for kb in dates:
-                            for hb in location:
-                                for ib in rapporto:
-                                    for jb in maturity:
-                                        try:
-                                            col_nodes = G[kb][hb][ib][jb].nodes()
-                                            nodelist = intersect1d(row_nodes,col_nodes)
-                                            #print len(row_nodes),len(col_nodes),len(nodelist)
-                                            A = to_numpy_matrix(G[k][h][i][j], weight = 'weight')
-                                            B = to_numpy_matrix(G[kb][hb][ib][jb], weight = 'weight')
-                                            indices = diag_indices_from(A)
-                                            A[indices] = 0
-                                            indices = diag_indices_from(B)
-                                            B[indices] = 0
+                        BN = (1. * (A > 0)).sum() + (1. * (B > 0)).sum()
+                    except TypeError:
+                        BN = 0
 
-                                            FN = norm(B) * norm(A)
-                                            try:
-                                                BN = (1. * (A > 0)).sum() + (1. * (B > 0)).sum()
-                                            except TypeError:
-                                                BN = 0
-
-                                            A = to_numpy_matrix(G[k][h][i][j], nodelist = nodelist, weight = 'weight')
-                                            B = to_numpy_matrix(G[kb][hb][ib][jb], nodelist = nodelist, weight = 'weight')
-                                            #print 'B is symmetric: ' + str((B == B.T).min()) 
-                                            
-                                            indices = diag_indices_from(A)
-                                            A[indices] = 0
-                                            B[indices] = 0
-                                            
-                                            A = array(A).flatten()
-                                            BT = array(B.T).flatten()
-                                            B = array(B).flatten()
-                                            
-                                            
-
-                                            #print dot(A,B),N
-                                            if FN > 0:
-                                                C[n,m] = dot(A,B) / FN
-                                                CT[n,m] = dot(A,BT) / FN
-                                                x = zeros((10**3,))
-                                                for q in range(10**3):
-                                                    print q
-                                                    shuffle(B)
-                                                    x[q] = dot(A,B) / FN
-                                                PC[n,m] = 1. - sum(x <= C[n,m]) / 10.**3
-                                            
-                                            A = 1. * (A > 0)
-                                            BT = 1. * (BT > 0)
-                                            B = 1. * (B > 0)
-                                            
-                                            if BN > 0:
-                                                BTN = BN - (A*BT).sum()
-                                                try:
-                                                    JT[n,m] = (A * BT).sum() / BTN
-                                                except TypeError:
-                                                    pass
-
-                                                BN -= (A*B).sum()
-                                                try:
-                                                    J[n,m] = (A * B).sum() / BN
-                                                except TypeError:
-                                                    pass
-                                                x = zeros((10**3,))
-                                                for q in range(10**3):
-                                                    print q
-                                                    shuffle(B)
-                                                    x[q] = (A * B).sum() / BN
-                                                PJ[n,m] = 1. - sum(x <= J[n,m]) / 10.**3
-                                                    
-                                            I[n,m] = len(nodelist)
-
-                                                
-                                        except AttributeError:
-                                            col_to_delete.append(m)
-                                        m += 1
-                    except AttributeError:
-                        row_to_delete.append(n)
+                    A = to_numpy_matrix(G[x], nodelist = nodelist, weight = 'weight')
+                    B = to_numpy_matrix(G[y], nodelist = nodelist, weight = 'weight')
+                   
+                    indices = diag_indices_from(A)
+                    A[indices] = 0
+                    B[indices] = 0
                     
-                    n+=1
-    
-    to_delete = intersect1d(row_to_delete,col_to_delete)    
-    #print 'deleted row / cols: ' + str(len(to_delete))
-    
-    J = delete(J,to_delete,0)
-    J = delete(J,to_delete,1)
+                    A = array(A).flatten()
+                    BT = array(B.T).flatten()
+                    B = array(B).flatten()
 
-    JT = delete(JT,to_delete,0)
-    JT = delete(JT,to_delete,1)
+                    if FN > 0:
+                        C[k,h] = dot(A,B) / FN
+                        CT[k,h] = dot(A,BT) / FN
+                    
+                    if BN > 0:
+                        BTN = BN - ((A>0)*(BT>0)).sum()
+                        try:
+                            JT[k,h] = ((A>0)*(BT>0)).sum() / BTN
+                        except TypeError:
+                            pass
 
-    I = delete(I,to_delete,0)
-    I = delete(I,to_delete,1)
+                        BN -= ((A>0)*(B>0)).sum()
+                        
+                        try:
+                            J[k,h] = ((A>0) * (B>0)).sum() / BN
+                        except TypeError:
+                            pass
 
-    C = delete(C,to_delete,0)
-    C = delete(C,to_delete,1)
+                        z = zeros((10**3,))
+                        t = zeros((10**3,))
 
-    CT = delete(CT,to_delete,0)
-    CT = delete(CT,to_delete,1)
+                        for q in range(10**3):
+                            if divmod(q,10**2)[1] == 0:
+                                print q
+                            shuffle(B)
+                            t[q] = ((A>0) * (B>0)).sum() / BN
+                            
+                            if FN > 0:
+                                z[q] = dot(A,B) / FN
+                            
+                        PJ[k,h] = 1. - sum(t <= J[k,h]) / 10.**3
+                        PJT[k,h] = 1. - sum(t <= JT[k,h]) / 10.**3
+                        
+                        if FN > 0:
+                            
+                            PC[k,h] = 1. - sum(z <= C[k,h]) / 10.**3
+                            PCT[k,h] = 1. - sum(z <= CT[k,h]) / 10.**3
 
-    
-    PJ = delete(PJ,to_delete,0)
-    PJ = delete(PJ,to_delete,1)
+                            
+                    I[k,h] = len(nodelist)
 
-    PC = delete(PC,to_delete,0)
-    PC = delete(PC,to_delete,1)
-    
-    
-    nodes = delete(nodes,to_delete)
-    links = delete(links,to_delete)
+                        
+                except AttributeError:
+                    pass
+                r -= 1
+                print 'steps left: ' + str(r)
 
-    filename = ''
 
-    if len(args) > 0:
-        for i in args:
-            filename += i
-    else:
-        filename += 'total'
-    
+        except AttributeError:
+            pass
         
-    os.chdir('similarity_results')
-    savetxt(filename + '.wmatrix',C,fmt = '%.4f')
-    savetxt(filename + '.wTmatrix',CT,fmt = '%.4f')
-    savetxt(filename + '.jTmatrix',JT,fmt = '%.4f')
-    savetxt(filename + '.jmatrix',J,fmt = '%.4f')
-    savetxt(filename + '.intersection',I,fmt = '%.4f')
-    savetxt(filename + '.jpvalues',PJ,fmt = '%.4f')
-    savetxt(filename + '.wpvalues',PC,fmt = '%.4f')
-    savetxt(filename + '.nodes',nodes,fmt = '%.4f')
-    savetxt(filename + '.links',links,fmt = '%.4f')
+
     
-    output = open(filename + '.labels','wb')
-    output.writelines(labels)
-    output.flush()    
+    indices = tril_indices_from(C)
+    C[indices] = C.T[indices]
+    J[indices] = J.T[indices]
+    JT[indices] = JT.T[indices]
+    I[indices] = I.T[indices]
+    PJ[indices] = PJ.T[indices]
+    PJT[indices] = PJT.T[indices]
+    CT[indices] = CT.T[indices]
+    PC[indices] = PC.T[indices]
+    PCT[indices] = PCT.T[indices]
     
-    #print 'shape of similarity matrix:'
-    #print J.shape
+    try:
+        os.chdir('similarity_results' + foldername)
+    except OSError:
+        os.mkdir('similarity_results' + foldername)
+        os.chdir('similarity_results' + foldername)
+
+        
+    savetxt(foldername + '.wmatrix',C,fmt = '%.4f')
+    savetxt(foldername + '.wTmatrix',CT,fmt = '%.4f')
+    savetxt(foldername + '.jTmatrix',JT,fmt = '%.4f')
+    savetxt(foldername + '.jmatrix',J,fmt = '%.4f')
+    savetxt(foldername + '.intersection',I,fmt = '%.4f')
+    savetxt(foldername + '.jpvalues',PJ,fmt = '%.4f')
+    savetxt(foldername + '.wpvalues',PC,fmt = '%.4f')
+    savetxt(foldername + '.jTpvalues',PJT,fmt = '%.4f')
+    savetxt(foldername + '.wTpvalues',PCT,fmt = '%.4f')
+    savetxt(foldername + '.nodes',nodes,fmt = '%.4f')
+    savetxt(foldername + '.links',links,fmt = '%.4f')
+    
+    output = open(foldername + '.labels','wb')
+    output.writelines([i +'\n'  for i in labels])
+    
                                     
     os.chdir('..')
                     
