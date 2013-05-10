@@ -44,9 +44,6 @@ def main():
         nodelist = None
         label = '_unadj'
     
-    #if filename.find('dom') <> -1:
-    #    label = ''
-
     if opts.rapporto is None:
         opts.rapporto = 'TOT'
     

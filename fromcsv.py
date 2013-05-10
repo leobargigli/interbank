@@ -52,18 +52,17 @@ def main():
         
     dates = unique(edgelist['date'])
     savetxt('dates.csv',dates,fmt ='%s')
-    
+    reporters = dict()    
 
     for i in dates:
         
         reporterfile = i + '_reporters.csv'
         indices = where(edgelist['date'] == i)
         y_edgelist = edgelist[indices]
-        reporters = unique(y_edgelist['source'])
-        print i + '_totreporters:' + str(len(reporters))
-        savetxt(reporterfile,reporters,fmt ='%s')
-        
-    
+        reporters[i] = unique(y_edgelist['source'])
+        print i + '_totreporters: ' + str(len(reporters[i]))
+        savetxt(reporterfile,reporters[i],fmt ='%s')
+
     
     if opts.domestic == 1:
         
@@ -96,6 +95,8 @@ def main():
         edgelist['source'][indices] = source
         edgelist['dest'][indices] = dest
         opt = 'tot'
+
+
         
     for i in dates:
         
@@ -104,6 +105,17 @@ def main():
         filename = i + '_' + opt 
         print i,len(y_edgelist),y_edgelist['weight'].sum()
         save(filename,y_edgelist)
+        nodes = union1d(y_edgelist['source'],y_edgelist['dest'])
+        indices = list()
+        for j in reporters[i]:
+            try:
+                indices.append(where(nodes == j)[0].item())
+            except ValueError:
+                pass
+                
+        indicesfile = i + '_'+ opt + '_reporters.indices'
+        savetxt(indicesfile,indices,fmt ='%i')
+
                                 
     
 if __name__ == "__main__":
