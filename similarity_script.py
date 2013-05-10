@@ -142,7 +142,7 @@ def main():
     ]
     
     for i in to_remove:
-        labels = [j for j in labels if j.find(i) == -1]
+        labels = [j for j in labels if j.find(i) == -1 or j.find('UNSECURED') <>-1]
         
     n = len(labels) 
    
