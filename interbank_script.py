@@ -78,11 +78,11 @@ def main():
         nodelist = np.intersect1d(nodelist,Y.nodes)
     
    
-    try:
-        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
-    except OSError:
-        os.mkdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
-        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
+#    try:
+#        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
+#    except OSError:
+#        os.mkdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
+#        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
   
     G = Y.Net
     
@@ -180,7 +180,7 @@ def main():
 #                    format = img, 
 #                    nbunch = nodelist, directed = True)
     
-    os.chdir('..')
+#    os.chdir('..')
         
     
   

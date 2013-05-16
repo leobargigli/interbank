@@ -150,6 +150,7 @@ class Year:
 
         scomps = nx.strongly_connected_component_subgraphs(G.subgraph(nbunch))
         scomp_size = np.sort([i.number_of_nodes() for i in scomps])[-1]
+        print scomp_size
         
         assortativity_out = assortativity(G, x = 'out', y = 'out', nbunch = nbunch)
         assortativity_in = assortativity(G, x = 'in', y = 'in', nbunch = nbunch)
@@ -207,16 +208,15 @@ class Year:
         uC = np.average(clustering_coefficient(G, nbunch = nbunch)[0])
         triangles = sum(nx.triangles(G.to_undirected(),nodes = nbunch).values())
         
-        if len(wcomps) >= 1:
-            avg_path_length = nx.average_shortest_path_length(wcomps[0])
-            try:
-                avg_weight_path_length = nx.average_shortest_path_length(scomps[0],weighted = True)
-            except TypeError:
-                avg_weight_path_length = nx.average_shortest_path_length(scomps[0],weight = 'weight')
-        
+        if len(wcomps[0]) > 1:
+            avg_path_length = nx.average_shortest_path_length(wcomps[0].to_undirected())
         else:
             avg_path_length = 0
-            avg_weight_path_length = 0
+
+        if len(scomps[0]) > 1:
+            avg_dir_path_length = nx.average_shortest_path_length(scomps[0])
+        else:
+            avg_dir_path_length = 0
             
         
 
@@ -230,8 +230,8 @@ class Year:
         output.write('Volume (net): %.2f\n'%net_volume)
         output.write('Nodes in the largest weak component:% i\n'%wcomp_size)
         output.write('Nodes in the largest strong component:% i\n'%scomp_size)
-        output.write('Average path length: %f\n'%avg_path_length) 
-        output.write('Average weighted path length: %.4f\n'%avg_weight_path_length) 
+        output.write('Average undirected path length: %f\n'%avg_path_length) 
+        output.write('Average directed path length: %.4f\n'%avg_dir_path_length) 
         output.write('Out-degree assortativity: %.4f\n'%assortativity_out[0])
         output.write('(p-value): (%.4f)\n'%assortativity_out[1])
         output.write('In-degree assortativity: %.4f \n'%assortativity_in[0]) 
