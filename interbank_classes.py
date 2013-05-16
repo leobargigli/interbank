@@ -151,8 +151,8 @@ class Year:
         scomps = nx.strongly_connected_component_subgraphs(G.subgraph(nbunch))
         scomp_size = np.sort([i.number_of_nodes() for i in scomps])[-1]
         
-        assortativity_out = assortativity(G, x='out', y='out', nbunch = nbunch)
-        assortativity_in = assortativity(G, x='in', y='in', nbunch = nbunch)
+        assortativity_out = assortativity(G, x = 'out', y = 'out', nbunch = nbunch)
+        assortativity_in = assortativity(G, x = 'in', y = 'in', nbunch = nbunch)
 
         try:
             w_assortativity_out = assortativity(G, x = 'out', y = 'out', weighted = True, nbunch = nbunch)
@@ -210,9 +210,9 @@ class Year:
         if len(wcomps) >= 1:
             avg_path_length = nx.average_shortest_path_length(wcomps[0])
             try:
-                avg_weight_path_length = nx.average_shortest_path_length(wcomps[0],weighted = True)
+                avg_weight_path_length = nx.average_shortest_path_length(scomps[0],weighted = True)
             except TypeError:
-                avg_weight_path_length = nx.average_shortest_path_length(wcomps[0],weight = 'weight')
+                avg_weight_path_length = nx.average_shortest_path_length(scomps[0],weight = 'weight')
         
         else:
             avg_path_length = 0

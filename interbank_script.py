@@ -1,10 +1,9 @@
 from interbank_classes import *
 import numpy as np
 import os
-import sys
 from optparse import OptionParser
-from plfit import plfit
-from plplot import plplot
+#from plfit import plfit
+#from plplot import plplot
 from basic_stats_funcs import *
 
 
@@ -106,26 +105,26 @@ def main():
      }
     #print distG
     
-    filename = Y.filename + label + opts.rapporto + opts.maturity + '_stats.dat'
+#    filename = Y.filename + label + opts.rapporto + opts.maturity + '_stats.dat'
+#    
+#    output = open(filename, 'a')
+#    output.write('\n')    
     
-    output = open(filename, 'a')
-    output.write('\n')    
-    
-    for i in distG:
-        
-        x = distG[i]
-
-        
-        distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '.distr'
-        np.savetxt(distfile, x, fmt = fmts[i])
-        if i <>'net cells' and i <> 'gross cells':
-            knnk = k_vs_nnk(G, i, nbunch = nodelist)
-            knnk = knnk.items()
-            knnk = np.array(knnk)
-            k = knnk[:, 0]
-            nnk = knnk[:, 1]
-            labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
-            scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
+#    for i in distG:
+#        
+#        x = distG[i]
+#
+#        
+#        distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '.distr'
+#        np.savetxt(distfile, x, fmt = fmts[i])
+#        if i <>'net cells' and i <> 'gross cells':
+#            knnk = k_vs_nnk(G, i, nbunch = nodelist)
+#            knnk = knnk.items()
+#            knnk = np.array(knnk)
+#            k = knnk[:, 0]
+#            nnk = knnk[:, 1]
+#            labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
+#            scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
 
 #        indices = np.where(x == 0)
 #        x = np.delete(x, indices)
@@ -148,38 +147,38 @@ def main():
 #        except ValueError:
 #            pass
     
-    options = [
-        ('out',True,0),
-        ('out',False,50), 
-        ('in',True,0),
-        ('in',False,50)]
-        
-    for i,j,k in options:
-        try:
-            part_dict = exp_part_ratio(G, i, nbunch = nodelist, degree = j, quant = k)
-            part_dict = part_dict.items()
-            part_dict = np.array(part_dict)
-            epart = part_dict[:, 0]
-            part = part_dict[:, 1]
-            labeldict = {True: 'inverse degree', False: 'weight'}
-            ydict = {True: r'$1 / k$', False : ''} 
-            labels = [ydict[j],r'Part. ratio',r'Participation_ratio_vs_%s%s' % (i,labeldict[j])]
-            scatter(epart, part, labels, 
-                    opts.rapporto + opts.maturity + Y.filename + label, 
-                    diag = True,fmt = img)
-
-        except IndexError:
-            pass
-        except ValueError:
-            pass
-            
-        
-    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename,
-                    format = img, 
-                    nbunch = nodelist)
-    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename, 
-                    format = img, 
-                    nbunch = nodelist, directed = True)
+#    options = [
+#        ('out',True,0),
+#        ('out',False,50), 
+#        ('in',True,0),
+#        ('in',False,50)]
+#        
+#    for i,j,k in options:
+#        try:
+#            part_dict = exp_part_ratio(G, i, nbunch = nodelist, degree = j, quant = k)
+#            part_dict = part_dict.items()
+#            part_dict = np.array(part_dict)
+#            epart = part_dict[:, 0]
+#            part = part_dict[:, 1]
+#            labeldict = {True: 'inverse degree', False: 'weight'}
+#            ydict = {True: r'$1 / k$', False : ''} 
+#            labels = [ydict[j],r'Part. ratio',r'Participation_ratio_vs_%s%s' % (i,labeldict[j])]
+#            scatter(epart, part, labels, 
+#                    opts.rapporto + opts.maturity + Y.filename + label, 
+#                    diag = True,fmt = img)
+#
+#        except IndexError:
+#            pass
+#        except ValueError:
+#            pass
+#            
+#        
+#    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename,
+#                    format = img, 
+#                    nbunch = nodelist)
+#    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename, 
+#                    format = img, 
+#                    nbunch = nodelist, directed = True)
     
     os.chdir('..')
         

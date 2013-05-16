@@ -118,19 +118,19 @@ def main():
                             G[k + h + i + j] =  bdi.Year(filename, rapporto = i, maturity = j).Net.subgraph(nodelist)
                         else:
                             G[k + h + i + j] =  bdi.Year(filename,rapporto = i, maturity = j).Net
-                            comps = weakly_connected_component_subgraphs(G[k + h + i + j])
-                            if len(comps) > 0:
-                                W = to_numpy_matrix(comps[0])
-                                K = Kmatrix(W)
-                                sv = svd(K,0,0)
-                                try:
-                                    os.chdir('similarity_results' + foldername)
-                                except OSError:
-                                    os.mkdir('similarity_results' + foldername)
-                                    os.chdir('similarity_results' + foldername)
-
-                                savetxt(k + h + i + j + '_svs',sv)
-                                os.chdir('..')
+                            #comps = weakly_connected_component_subgraphs(G[k + h + i + j])
+                            #if len(comps) > 0:
+                            #    W = to_numpy_matrix(comps[0])
+                            #    K = Kmatrix(W)
+#                                sv = svd(K,0,0)
+#                                try:
+#                                    os.chdir('similarity_results' + foldername)
+#                                except OSError:
+#                                    os.mkdir('similarity_results' + foldername)
+#                                    os.chdir('similarity_results' + foldername)
+#
+#                                savetxt(k + h + i + j + '_svs',sv)
+#                                os.chdir('..')
                             
                         labels.append(k + h + i + j)
                     except AttributeError:
@@ -176,18 +176,18 @@ def main():
                     y = labels[h]
                     col_nodes = G[y].nodes()
                     nodelist = intersect1d(row_nodes,col_nodes)
-                    A = to_numpy_matrix(G[x], weight = 'weight')
-                    B = to_numpy_matrix(G[y], weight = 'weight')
-                    indices = diag_indices_from(A)
-                    A[indices] = 0
-                    indices = diag_indices_from(B)
-                    B[indices] = 0
+#                    A = to_numpy_matrix(G[x], weight = 'weight')
+#                    B = to_numpy_matrix(G[y], weight = 'weight')
+#                    indices = diag_indices_from(A)
+#                    A[indices] = 0
+#                    indices = diag_indices_from(B)
+#                    B[indices] = 0
 
-                    FN = norm(B) * norm(A)
-                    try:
-                        BN = (1. * (A > 0)).sum() + (1. * (B > 0)).sum()
-                    except TypeError:
-                        BN = 0
+#                    FN = norm(B) * norm(A)
+#                    try:
+#                        BN = (1. * (A > 0)).sum() + (1. * (B > 0)).sum()
+#                    except TypeError:
+#                        BN = 0
 
                     A = to_numpy_matrix(G[x], nodelist = nodelist, weight = 'weight')
                     B = to_numpy_matrix(G[y], nodelist = nodelist, weight = 'weight')
@@ -195,6 +195,14 @@ def main():
                     indices = diag_indices_from(A)
                     A[indices] = 0
                     B[indices] = 0
+
+
+                    FN = norm(B) * norm(A)
+                    try:
+                        BN = (1. * (A > 0)).sum() + (1. * (B > 0)).sum()
+                    except TypeError:
+                        BN = 0
+
                     
                     A = array(A).flatten()
                     BT = array(B.T).flatten()
