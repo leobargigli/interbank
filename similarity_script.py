@@ -15,27 +15,39 @@ from networkx import to_numpy_matrix,weakly_connected_component_subgraphs
 import os
 from comm_detect_funcs import Kmatrix
 
-USAGE = "%prog (date) (location) (rapporto) (maturity)"
+USAGE = "%prog (date) (location) (rapporto) (maturity) --excl"
 USE_DESCRIPTION = "date is YYYYMMDD. \n location is 'dom', 'tot_adj' or 'tot_unadj'.\n rapporto is 'SECURED', 'UNSECURED' or 'TOT'. \n maturity is 'overnight', 'medium', longterm', 'nonsignif' or 'TOT'."
 parser = OptionParser( USAGE , description= " " + USE_DESCRIPTION ) 
-parser.set_defaults( verbosity = None)
 
+parser.set_defaults( verbosity = None)
+parser.add_option("-e", "--excl",
+                  action="store_true", dest="exclude", default=False,
+                  help="excludes a maturity")
+
+parser.add_option("-i", "--inters",
+                  action = "store_true", dest="inters", default = False,
+                  help = "intersection of nodes from the two layers")
 
 def main():
     
-    args = parser.parse_args()[1]
+    ( opts , args ) = parser.parse_args()
+    
     
     rapporto = [
     'SECURED',
     'UNSECURED',
     'TOT']
         
+#    maturity = [
+#    'overnight',
+#    'longterm',
+#    'nonsignif',
+#    'medium',
+#    'TOT']
+    
     maturity = [
     'overnight',
-    'longterm',
-    'nonsignif',
-    'medium',
-    'TOT']
+    'TOT']    
     
     location = [
     'dom',
@@ -58,6 +70,12 @@ def main():
     else:
         foldername += 'total'
     
+    node_dict = {
+    False: 'union',
+    True: 'intersect'
+    }
+
+    foldername += node_dict[opts.inters]    
     
     for i in args:
 
@@ -89,8 +107,8 @@ def main():
             pass
         if len(select_maturity) > 0:
             maturity = select_maturity
-        if len(maturity) > 1:
-            maturity = [j for j in maturity if j <> 'TOT']            
+#        if len(maturity) > 1:
+#            maturity = [j for j in maturity if j <> 'TOT']            
 
         select_location = list()
         try:
@@ -101,10 +119,14 @@ def main():
         if len(select_location) > 0:
             location = select_location
 
-
-
     G = {}
     labels = list()
+    
+    exclude = {
+    'SECURED': None,
+    'UNSECURED': 'overnight',
+    'TOT':None}
+    
 
     for k in dates:
         for h in location:
@@ -112,12 +134,25 @@ def main():
                 for j in maturity:
                     filename = k + '_' + h.split('_')[0] + '.npy'
                     try:
-                        if h.find('tot_adj') is not -1:
-                            reporters = k + '_reporters.csv'
-                            nodelist = loadtxt(reporters,dtype = str, delimiter = ',')
-                            G[k + h + i + j] =  bdi.Year(filename, rapporto = i, maturity = j).Net.subgraph(nodelist)
+#                        if h.find('tot_adj') is not -1:
+#                            reporters = k + '_reporters.csv'
+#                            nodelist = loadtxt(reporters,dtype = str, delimiter = ',')
+#                            G[k + h + i + j] =  bdi.Year(filename, 
+#                                rapporto = i,
+#                                maturity = j, 
+#                                exclude = opts.exclude).Net.subgraph(nodelist)
+#                        else:
+                        if j is 'TOT':
+                            G[k + h + i + j] =  bdi.Year(filename,
+                            rapporto = i, 
+                            maturity = j , 
+                            exclude = exclude[i]).Net
                         else:
-                            G[k + h + i + j] =  bdi.Year(filename,rapporto = i, maturity = j).Net
+                            G[k + h + i + j] =  bdi.Year(filename,
+                            rapporto = i, 
+                            maturity = j).Net
+                           
+                            
                             #comps = weakly_connected_component_subgraphs(G[k + h + i + j])
                             #if len(comps) > 0:
                             #    W = to_numpy_matrix(comps[0])
@@ -176,26 +211,21 @@ def main():
                     y = labels[h]
                     col_nodes = G[y].nodes()
                     nodelist = intersect1d(row_nodes,col_nodes)
-#                    A = to_numpy_matrix(G[x], weight = 'weight')
-#                    B = to_numpy_matrix(G[y], weight = 'weight')
-#                    indices = diag_indices_from(A)
-#                    A[indices] = 0
-#                    indices = diag_indices_from(B)
-#                    B[indices] = 0
 
-#                    FN = norm(B) * norm(A)
-#                    try:
-#                        BN = (1. * (A > 0)).sum() + (1. * (B > 0)).sum()
-#                    except TypeError:
-#                        BN = 0
+                    if opts.inters is True:
+                        
+                        A = to_numpy_matrix(G[x], nodelist = nodelist, weight = 'weight')
+                        B = to_numpy_matrix(G[y], nodelist = nodelist, weight = 'weight')
 
-                    A = to_numpy_matrix(G[x], nodelist = nodelist, weight = 'weight')
-                    B = to_numpy_matrix(G[y], nodelist = nodelist, weight = 'weight')
-                   
+                    else:
+                        
+                        A = to_numpy_matrix(G[x], weight = 'weight')
+                        B = to_numpy_matrix(G[y], weight = 'weight')
+
                     indices = diag_indices_from(A)
                     A[indices] = 0
+                    indices = diag_indices_from(B)
                     B[indices] = 0
-
 
                     FN = norm(B) * norm(A)
                     try:
@@ -203,6 +233,13 @@ def main():
                     except TypeError:
                         BN = 0
 
+
+                    A = to_numpy_matrix(G[x], nodelist = nodelist, weight = 'weight')
+                    B = to_numpy_matrix(G[y], nodelist = nodelist, weight = 'weight')
+                    indices = diag_indices_from(A)
+                    A[indices] = 0
+                    indices = diag_indices_from(B)
+                    B[indices] = 0
                     
                     A = array(A).flatten()
                     BT = array(B.T).flatten()
@@ -271,6 +308,8 @@ def main():
     CT[indices] = CT.T[indices]
     PC[indices] = PC.T[indices]
     PCT[indices] = PCT.T[indices]
+    
+    print foldername    
     
     try:
         os.chdir('similarity_results' + foldername)

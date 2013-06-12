@@ -13,7 +13,8 @@ class Year:
 
     def __init__(self, filename, delimiter = ',',
                  rapporto = 'TOT', 
-                 maturity = 'TOT'):
+                 maturity = 'TOT',
+                 exclude = None):
 
         try:
             edgelist = np.load(filename)
@@ -24,6 +25,11 @@ class Year:
             if maturity is not 'TOT':
                 indices = np.where(edgelist['maturity'] == maturity)
                 edgelist = edgelist[indices]
+            
+            elif exclude is not None:
+                indices = np.where(edgelist['maturity'] <> exclude)
+                edgelist = edgelist[indices]
+                    
             
             ####
         
