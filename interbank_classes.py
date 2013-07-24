@@ -170,6 +170,11 @@ class Year:
 
         recip = reciprocity(G, nbunch = nbunch)
         w_recip = reciprocity(G, weight = True, nbunch = nbunch)
+        
+        W = nx.to_numpy_matrix(G,nodelist = nbunch)
+        W = 1. * (W > 0)
+        dyads = (W * W.T).sum()
+        
         #~ distG = dists(G, nbunch = nbunch)
         out_degree = distG['out-degree']
         out_weight = distG['gross out-weight']
@@ -256,6 +261,7 @@ class Year:
         output.write('(p-value): (%.4f) \n'%recip[1]) 
         output.write('Weight reciprocity: %.4f\n'%w_recip[0])
         output.write('(p-value): (%.4f)\n'%w_recip[1])
+        output.write('# reciprocal dyads: %.4f\n'%dyads)
         output.write('Average directed clustering: %.4f\n'%dC) 
         output.write('Average undirected clustering: %.4f\n'%uC) 
         output.write('# Undirected triangles: %.4f\n'%triangles) 

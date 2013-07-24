@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-\\\\\\\\\\\\\\
 """
 Created on Tue Jan 15 11:06:33 2013
 
@@ -68,7 +68,7 @@ def main():
         
         indices = where(edgelist['location'] == 'domest')
         edgelist = edgelist[indices]
-        indices = where(edgelist['cred_deb'] == 'DEBITI')
+        indices = where(edgelist['cred_deb'] == 'IMPIEGHI')
         edgelist = edgelist[indices]
         opt = 'dom'
         
@@ -76,7 +76,7 @@ def main():
     elif opts.foreign == 2:
         indices = where(edgelist['location'] == 'estero')
         edgelist = edgelist[indices]
-        indices = where(edgelist['cred_deb'] == 'IMPIEGHI')
+        indices = where(edgelist['cred_deb'] == 'DEBITI')
         source = edgelist['dest'][indices].copy()
         dest = edgelist['source'][indices].copy()
         edgelist['source'][indices] = source
@@ -86,10 +86,10 @@ def main():
     else:
         
         indices_l = where(edgelist['location'] == 'domest')
-        indices_d = where(edgelist['cred_deb'] == 'IMPIEGHI')
+        indices_d = where(edgelist['cred_deb'] == 'DEBITI')
         indices = intersect1d(indices_l[0],indices_d[0])
         edgelist = delete(edgelist,indices)
-        indices = where(edgelist['cred_deb'] == 'IMPIEGHI')
+        indices = where(edgelist['cred_deb'] == 'DEBITI')
         source = edgelist['dest'][indices].copy()
         dest = edgelist['source'][indices].copy()
         edgelist['source'][indices] = source

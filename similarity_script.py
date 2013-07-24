@@ -20,9 +20,9 @@ USE_DESCRIPTION = "date is YYYYMMDD. \n location is 'dom', 'tot_adj' or 'tot_una
 parser = OptionParser( USAGE , description= " " + USE_DESCRIPTION ) 
 
 parser.set_defaults( verbosity = None)
-parser.add_option("-e", "--excl",
-                  action="store_true", dest="exclude", default=False,
-                  help="excludes a maturity")
+#parser.add_option("-e", "--excl",
+#                  action="store_true", dest="exclude", default=False,
+#                  help="excludes a maturity")
 
 parser.add_option("-i", "--inters",
                   action = "store_true", dest="inters", default = False,

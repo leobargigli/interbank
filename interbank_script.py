@@ -26,6 +26,12 @@ parser.add_option( "--rapporto", '--r',
     help = "must be either SECURED or UNSECURED", 
 )
 
+parser.add_option( "--exclude", '--e',
+    dest = "exclude",
+    help = "layer to be excluded from computation", 
+)
+
+
 
 def main():
     ( opts , args ) = parser.parse_args()
@@ -68,21 +74,25 @@ def main():
     for i in maturity:
         if i == opts.maturity:
             opts.maturity = i
+    
+    for i in maturity:
+        if i == opts.exclude:
+            opts.exclude = i
 
     Y = Year(filename,
              rapporto = opts.rapporto, 
-             maturity = opts.maturity)
+             maturity = opts.maturity,exclude = opts.exclude)
 
     # this is to clean from fake domestic links    
     if nodelist is not None:
         nodelist = np.intersect1d(nodelist,Y.nodes)
     
    
-#    try:
-#        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
-#    except OSError:
-#        os.mkdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
-#        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
+    try:
+        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
+    except OSError:
+        os.mkdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
+        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
   
     G = Y.Net
     
@@ -110,21 +120,21 @@ def main():
 #    output = open(filename, 'a')
 #    output.write('\n')    
     
-#    for i in distG:
-#        
-#        x = distG[i]
+    for i in distG:
+        
+ #       x = distG[i]
 #
 #        
 #        distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '.distr'
 #        np.savetxt(distfile, x, fmt = fmts[i])
-#        if i <>'net cells' and i <> 'gross cells':
-#            knnk = k_vs_nnk(G, i, nbunch = nodelist)
-#            knnk = knnk.items()
-#            knnk = np.array(knnk)
-#            k = knnk[:, 0]
-#            nnk = knnk[:, 1]
-#            labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
-#            scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
+        if i <>'net cells' and i <> 'gross cells':
+            knnk = k_vs_nnk(G, i, nbunch = nodelist)
+            knnk = knnk.items()
+            knnk = np.array(knnk)
+            k = knnk[:, 0]
+            nnk = knnk[:, 1]
+            labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
+            scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
 
 #        indices = np.where(x == 0)
 #        x = np.delete(x, indices)
@@ -147,40 +157,40 @@ def main():
 #        except ValueError:
 #            pass
     
-#    options = [
-#        ('out',True,0),
-#        ('out',False,50), 
-#        ('in',True,0),
-#        ('in',False,50)]
-#        
-#    for i,j,k in options:
-#        try:
-#            part_dict = exp_part_ratio(G, i, nbunch = nodelist, degree = j, quant = k)
-#            part_dict = part_dict.items()
-#            part_dict = np.array(part_dict)
-#            epart = part_dict[:, 0]
-#            part = part_dict[:, 1]
-#            labeldict = {True: 'inverse degree', False: 'weight'}
-#            ydict = {True: r'$1 / k$', False : ''} 
-#            labels = [ydict[j],r'Part. ratio',r'Participation_ratio_vs_%s%s' % (i,labeldict[j])]
-#            scatter(epart, part, labels, 
-#                    opts.rapporto + opts.maturity + Y.filename + label, 
-#                    diag = True,fmt = img)
-#
-#        except IndexError:
-#            pass
-#        except ValueError:
-#            pass
-#            
-#        
-#    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename,
-#                    format = img, 
-#                    nbunch = nodelist)
-#    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename, 
-#                    format = img, 
-#                    nbunch = nodelist, directed = True)
+    options = [
+        ('out',True,0),
+        ('out',False,50), 
+        ('in',True,0),
+        ('in',False,50)]
+        
+    for i,j,k in options:
+        try:
+            part_dict = exp_part_ratio(G, i, nbunch = nodelist, degree = j, quant = k)
+            part_dict = part_dict.items()
+            part_dict = np.array(part_dict)
+            epart = part_dict[:, 0]
+            part = part_dict[:, 1]
+            labeldict = {True: 'inverse degree', False: 'weight'}
+            ydict = {True: r'$1 / k$', False : ''} 
+            labels = [ydict[j],r'Part. ratio',r'Participation_ratio_vs_%s%s' % (i,labeldict[j])]
+            scatter(epart, part, labels, 
+                    opts.rapporto + opts.maturity + Y.filename + label, 
+                    diag = True,fmt = img)
+
+        except IndexError:
+            pass
+        except ValueError:
+            pass
+            
+        
+    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename,
+                    format = img, 
+                    nbunch = nodelist)
+    clust_vs_degree(G, opts.rapporto + opts.maturity + Y.filename, 
+                    format = img, 
+                    nbunch = nodelist, directed = True)
     
-#    os.chdir('..')
+    os.chdir('..')
         
     
   
