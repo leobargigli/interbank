@@ -38,19 +38,20 @@ def main():
     'UNSECURED',
     'TOT']
         
-#    maturity = [
-#    'overnight',
-#    'longterm',
-#    'nonsignif',
-#    'medium',
-#    'TOT']
-    
     maturity = [
     'overnight',
-    'TOT']    
+    'longterm',
+#    'nonsignif',
+    'medium',
+    'TOT']
+    
+#    maturity = [
+#    'overnight',
+#    'TOT']    
     
     location = [
-    'dom',
+    'dom_unadj',
+    'dom_adj',
     'tot_adj',
     'tot_unadj']
     
@@ -107,8 +108,8 @@ def main():
             pass
         if len(select_maturity) > 0:
             maturity = select_maturity
-#        if len(maturity) > 1:
-#            maturity = [j for j in maturity if j <> 'TOT']            
+        if len(maturity) > 1:
+            maturity = [j for j in maturity if j <> 'TOT']            
 
         select_location = list()
         try:
@@ -119,13 +120,14 @@ def main():
         if len(select_location) > 0:
             location = select_location
 
+
     G = {}
     labels = list()
     
-    exclude = {
-    'SECURED': None,
-    'UNSECURED': 'overnight',
-    'TOT':None}
+#    exclude = {
+#    'SECURED': None,
+#    'UNSECURED': 'overnight',
+#    'TOT':None}
     
 
     for k in dates:
@@ -134,46 +136,45 @@ def main():
                 for j in maturity:
                     filename = k + '_' + h.split('_')[0] + '.npy'
                     try:
-#                        if h.find('tot_adj') is not -1:
-#                            reporters = k + '_reporters.csv'
-#                            nodelist = loadtxt(reporters,dtype = str, delimiter = ',')
-#                            G[k + h + i + j] =  bdi.Year(filename, 
-#                                rapporto = i,
-#                                maturity = j, 
-#                                exclude = opts.exclude).Net.subgraph(nodelist)
-#                        else:
-                        if j is 'TOT':
-                            G[k + h + i + j] =  bdi.Year(filename,
-                            rapporto = i, 
-                            maturity = j , 
-                            exclude = exclude[i]).Net
+                        if h.find('_adj') is not -1:
+                            reporters = k + '_reporters.csv'
+                            nodelist = loadtxt(reporters,dtype = str, delimiter = ',')
+                            G[k + h + i + j] =  bdi.Year(filename, 
+                                rapporto = i,
+                                maturity = j).Net.subgraph(nodelist)
                         else:
+#                        if j is 'TOT':
+#                            G[k + h + i + j] =  bdi.Year(filename,
+#                            rapporto = i, 
+#                            maturity = j , 
+#                            exclude = exclude[i]).Net
+#                        else:
                             G[k + h + i + j] =  bdi.Year(filename,
                             rapporto = i, 
                             maturity = j).Net
                            
                             
-                            #comps = weakly_connected_component_subgraphs(G[k + h + i + j])
-                            #if len(comps) > 0:
-                            #    W = to_numpy_matrix(comps[0])
-                            #    K = Kmatrix(W)
-#                                sv = svd(K,0,0)
-#                                try:
-#                                    os.chdir('similarity_results' + foldername)
-#                                except OSError:
-#                                    os.mkdir('similarity_results' + foldername)
-#                                    os.chdir('similarity_results' + foldername)
-#
-#                                savetxt(k + h + i + j + '_svs',sv)
-#                                os.chdir('..')
+                        comps = weakly_connected_component_subgraphs(G[k + h + i + j])
+                        if len(comps) > 0:
+                            W = to_numpy_matrix(comps[0])
+                            K = Kmatrix(W)
+                            sv = svd(K,0,0)
+                            try:
+                                os.chdir('similarity_results' + foldername)
+                            except OSError:
+                                os.mkdir('similarity_results' + foldername)
+                                os.chdir('similarity_results' + foldername)
+
+                            savetxt(k + h + i + j + '_svs',sv)
+                            os.chdir('..')
                             
                         labels.append(k + h + i + j)
                     except AttributeError:
                         pass
     
     to_remove = [
-    'SECUREDovernight',
-    'SECUREDlongterm',
+    'SECUREDovernight'#,
+#    'SECUREDlongterm',
     ]
     
     for i in to_remove:
