@@ -171,7 +171,7 @@ class Year:
         recip = reciprocity(G, nbunch = nbunch)
         w_recip = reciprocity(G, weight = True, nbunch = nbunch)
         
-        W = nx.to_numpy_matrix(G,nodelist = nbunch)
+        W = np.array(nx.to_numpy_matrix(G,nodelist = nbunch))
         W = 1. * (W > 0)
         dyads = (W * W.T).sum()
         
