@@ -88,30 +88,62 @@ def main():
         nodelist = np.intersect1d(nodelist,Y.nodes)
     
    
-    try:
-        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
-    except OSError:
-        os.mkdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
-        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
+#    try:
+#        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
+#    except OSError:
+#        os.mkdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
+#        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
   
     G = Y.Net
     
-    distG = dists(G, nbunch = nodelist)
-    Y.stats(distG,nbunch = nodelist)
+    #distG = dists(G, nbunch = nodelist)
+    #Y.stats(distG,nbunch = nodelist)
+
+    # this section is to build the distributions for the estimation of null models
+    
+    G = G.subgraph(nodelist)
+    selfloops = G.selfloop_edges(data = True)
+    G.remove_edges_from(selfloops)
+    
+    try:
+        out_degree = G.out_degree()
+        in_degree = G.in_degree()
+        net_out_weight = G.out_degree(weighted = True)
+        net_in_weight = G.in_degree(weighted = True)
+
+    except TypeError:
+        out_degree = G.out_degree()
+        in_degree = G.in_degree()
+        net_out_weight = G.out_degree(weight = 'weight')
+        net_in_weight = G.in_degree(weight = 'weight')
+
+    distG = {
+    'out-degree': 
+    np.array([out_degree[i] for i in nodelist],dtype = np.float32), 
+    'in-degree': 
+    np.array([in_degree[i] for i in nodelist],dtype = np.float32), 
+    'net_out-weight': 
+    np.array([net_out_weight[i] for i in nodelist],dtype = np.float32), 
+    'net_in-weight': 
+    np.array([net_in_weight[i] for i in nodelist],dtype = np.float32)  
+    }
+
+    
+    # end of section
 
     if len(args) > 1:
         img = args[-1]
     else:
         img = 'png'
     fmts = {
-    'gross out-weight': '%.2f', 
-    'net out-weight': '%.2f', 
+    'gross_out-weight': '%.2f', 
+    'net_out-weight': '%.2f', 
     'in-degree': '%.1i', 
-    'gross in-weight': '%.2f', 
-    'net in-weight': '%.2f', 
+    'gross_in-weight': '%.2f', 
+    'net_in-weight': '%.2f', 
     'out-degree':'%.1i', 
-    'gross cells': '%.2f',
-    'net cells': '%.2f'
+    'gross_cells': '%.2f',
+    'net_cells': '%.2f'
      }
     #print distG
     
@@ -123,7 +155,7 @@ def main():
     for i in distG:
 #        
         x = distG[i]
-        distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '.distr'
+        distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '_subgraph.distr'
         np.savetxt(distfile, x, fmt = fmts[i])
 #        if i <>'net cells' and i <> 'gross cells':
 #            knnk = k_vs_nnk(G, i, nbunch = nodelist)
@@ -188,7 +220,7 @@ def main():
 #                    format = img, 
 #                    nbunch = nodelist, directed = True)
     
-    os.chdir('..')
+#    os.chdir('..')
         
     
   

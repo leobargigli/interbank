@@ -112,16 +112,16 @@ def dists(G, nbunch = None):
     np.array([out_degree[i] for i in nbunch],dtype = np.float32), 
     'in-degree': 
     np.array([in_degree[i] for i in nbunch],dtype = np.float32), 
-    'gross out-weight': 
+    'gross_out-weight': 
     np.array([gross_out_weight[i] for i in nbunch],dtype = np.float32), 
-    'gross in-weight': 
+    'gross_in-weight': 
     np.array([gross_in_weight[i] for i in nbunch],dtype = np.float32),  
-    'net out-weight': 
+    'net_out-weight': 
     np.array([net_out_weight[i] for i in nbunch],dtype = np.float32), 
-    'net in-weight': 
+    'net_in-weight': 
     np.array([net_in_weight[i] for i in nbunch],dtype = np.float32),  
-    'gross cells': grosscells,
-    'net cells': netcells
+    'gross_cells': grosscells,
+    'net_cells': netcells
     }
     
     return dists
