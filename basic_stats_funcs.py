@@ -152,34 +152,34 @@ def k_vs_nnk(G, label, nbunch = None):
     
     functions = {
     'out-degree': G.out_degree,
-     'gross out-weight': G.out_degree,
+     'gross_out-weight': G.out_degree,
      'in-degree': G.in_degree, 
-     'gross in-weight': G.in_degree,
-    'net out-weight': netG.out_degree,
-     'net in-weight': netG.in_degree,
+     'gross_in-weight': G.in_degree,
+    'net_out-weight': netG.out_degree,
+     'net_in-weight': netG.in_degree,
      }
     weight = {
     'out-degree': None,
-     'gross out-weight': 'weight',
+     'gross_out-weight': 'weight',
      'in-degree': None, 
-     'gross in-weight': 'weight',
-     'net in-weight': 'weight',
-     'net out-weight': 'weight',
+     'gross_in-weight': 'weight',
+     'net_in-weight': 'weight',
+     'net_out-weight': 'weight',
      }
     weighted = {
     'out-degree': 0, 
-    'net out-weight': 1,
-    'gross out-weight': 1,
+    'net_out-weight': 1,
+    'gross_out-weight': 1,
     'in-degree': 0, 
-    'net in-weight': 1,
-    'gross in-weight': 1
+    'net_in-weight': 1,
+    'gross_in-weight': 1
     }
     neighbors = {
     'out-degree':  G.successors, 
-    'gross out-weight':  G.successors, 
-    'net out-weight':  netG.successors, 
-    'gross in-weight':  G.predecessors, 
-    'net in-weight':  netG.predecessors, 
+    'gross_out-weight':  G.successors, 
+    'net_out-weight':  netG.successors, 
+    'gross_in-weight':  G.predecessors, 
+    'net_in-weight':  netG.predecessors, 
     'in-degree':  G.predecessors
     }
     try:

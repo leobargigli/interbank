@@ -63,7 +63,6 @@ def main():
     maturity = [
     'overnight',
     'longterm',
-    'nonsignif',
     'medium',
     'TOT']
 
@@ -86,7 +85,8 @@ def main():
     # this is to clean from fake domestic links    
     if nodelist is not None:
         nodelist = np.intersect1d(nodelist,Y.nodes)
-    
+    else:
+        nodelist = Y.nodes
    
 #    try:
 #        os.chdir(Y.filename + opts.rapporto + opts.maturity + label + '_stats')
@@ -157,14 +157,20 @@ def main():
         x = distG[i]
         distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '_subgraph.distr'
         np.savetxt(distfile, x, fmt = fmts[i])
-#        if i <>'net cells' and i <> 'gross cells':
-#            knnk = k_vs_nnk(G, i, nbunch = nodelist)
-#            knnk = knnk.items()
-#            knnk = np.array(knnk)
-#            k = knnk[:, 0]
-#            nnk = knnk[:, 1]
-#            labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
-#            scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
+        
+        if i <>'net cells' and i <> 'gross cells':
+            knnk = k_vs_nnk(G, i, nbunch = nodelist)
+            knnk = knnk.items()
+            knnk = np.array(knnk)
+            k = knnk[:, 0]
+            nnk = knnk[:, 1]
+            #labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
+            #scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
+            np.savetxt(opts.rapporto + opts.maturity + Y.filename + label +'.knnk',np.array(zip(k,nnk)))
+
+            
+
+            
 #
 ##        indices = np.where(x == 0)
 ##        x = np.delete(x, indices)
@@ -222,8 +228,8 @@ def main():
     
 #    os.chdir('..')
         
-    
-  
+    cc, degree = clustering_coefficient(G, nbunch = nodelist)
+    np.savetxt(opts.rapporto + opts.maturity + Y.filename + label + '.clustering',np.array(zip(cc,degree)))
     
 #    
 #def __validate_opts_and_args( opts , args ):

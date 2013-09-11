@@ -98,7 +98,7 @@ def plplot(x,xmin,alpha, ntail, label,  filename,  format = None):
         
         xr1 = pow(10,floor(log(min(x),10)))
         xr2 = pow(10,ceil(log(min(x),10)))
-        yr1 = pow(10,floor(log(1./n,10)))
+        yr1 = 10**-4#pow(10,floor(log(1./n,10)))
         yr2 = 1
 
 
@@ -107,15 +107,15 @@ def plplot(x,xmin,alpha, ntail, label,  filename,  format = None):
     plt.xlabel('$x$',fontsize=16)
     
     if format is None:    format = 'png'
-    title = "ccdf_"+ label +"_plot"
-    plt.title(title)
+    if label is not None:
+    	plt.title(label)
     xmax = plt.xlim()[1]
     plt.text(1.5, yr1 + 0.0035, r'$\alpha = %.2f$'%(alpha), fontsize=16)
     plt.text(1.5, yr1 + 0.002, r'$x_{min} = %.2f$'%(xmin), fontsize=16)
-    plt.text(1.5, yr1+ 0.001, r'$n_{tail} = %i$'%(ntail), fontsize=16)
+    plt.text(1.5, yr1 + 0.001, r'$n_{tail} = %i$'%(ntail), fontsize=16)
 
 
-    plt.savefig(title+'_'+filename+'.'+format, format = format)
+    plt.savefig(filename+'.'+format, format = format)
                  
           
 

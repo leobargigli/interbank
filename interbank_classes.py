@@ -52,11 +52,11 @@ class Year:
             
             foreign_links = np.where(edgelist['location'] == 'estero')[0]
         
-            for i in foreign_links:
-                f_ctp =  edgelist[i]['dest']
-                chk_branch = np.intersect1d(reporters,f_ctp)
-                if len(chk_branch) > 0: 
-                    edgelist[i]['dest'] += 'F'
+#            for i in foreign_links:
+#                f_ctp =  edgelist[i]['dest']
+#                chk_branch = np.intersect1d(reporters,f_ctp)
+#                if len(chk_branch) > 0: 
+#                    edgelist[i]['dest'] += 'F'
 
             
         except IOError:
