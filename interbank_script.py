@@ -166,7 +166,7 @@ def main():
             nnk = knnk[:, 1]
             #labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
             #scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
-            np.savetxt(opts.rapporto + opts.maturity + Y.filename + label +'.knnk',np.array(zip(k,nnk)))
+            np.savetxt(Y.filename  + label + opts.rapporto + opts.maturity + i  +'.knnk',np.array(zip(k,nnk)))
 
             
 
@@ -228,8 +228,8 @@ def main():
     
 #    os.chdir('..')
         
-    cc, degree = clustering_coefficient(G, nbunch = nodelist)
-    np.savetxt(opts.rapporto + opts.maturity + Y.filename + label + '.clustering',np.array(zip(cc,degree)))
+    #cc, degree = clustering_coefficient(G, nbunch = nodelist)
+    #np.savetxt(opts.rapporto + opts.maturity + Y.filename + label + '.clustering',np.array(zip(cc,degree)))
     
 #    
 #def __validate_opts_and_args( opts , args ):

@@ -126,22 +126,18 @@ def dists(G, nbunch = None):
     
     return dists
     
-def scatter(x, y, labels, filename, fmt ='png', diag = False):
-    xlabel, ylabel, title = labels
+def scatter_save(x, y, filename, fmt ='pdf', diag = False, **kwargs):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(x, y)
-    
-    ax.set_title(title, fontsize = 16)
-    ax.set_xlabel(xlabel, fontsize = 16)
-    ax.set_ylabel(ylabel, fontsize = 16)
+    ax.scatter(x, y, **kwargs)
     
     if diag == True:
         line = plt.Line2D([0,1],[0,1])
         ax.add_line(line)
         ax.set_xlim((0.,1. ))
         ax.set_ylim((0.,1. ))
-    plt.savefig(title + '_' + filename + '.' + fmt, fmt = fmt)
+        
+    plt.savefig(filename + '.' + fmt, fmt = fmt)
     plt.close()
 
 def k_vs_nnk(G, label, nbunch = None):
@@ -346,35 +342,31 @@ def exp_part_ratio(G,direction, nbunch = None, quant = 50, degree = True):
     return part_dict
         
 
-def clust_vs_degree(G, filename, nbunch = None,  format = None, directed = False):
-    if format is None:    format = 'png'
-    if directed is False:
-        C, degree = clustering_coefficient(G, nbunch = nbunch)
-    else: 
-        C, degree = dir_clustering_coefficient(G, nbunch = nbunch)
+def scatter_pylab(x,y,  
+                    format = None, show_avg = False, **kwargs):
+#    if directed is False:
+#        C, degree = clustering_coefficient(G, nbunch = nbunch)
+#    else: 
+#        C, degree = dir_clustering_coefficient(G, nbunch = nbunch)
     
-    dirdict  = {True: 'directed', False: ''}
+    #dirdict  = {True: 'directed', False: ''}
     
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.scatter(degree, C)
-    avg_C = np.average(C)
-    xmin, xmax = ax.get_xlim()
-    line = plt.Line2D([xmin,xmax],[avg_C,avg_C])
-    ax.add_line(line)
-    ax.set_ylabel('Clustering coefficient')
+    #fig = plt.figure()
+    #ax = fig.add_subplot(111)
+    plt.scatter(x, y, **kwargs)
+    xmin, xmax = plt.xlim()
+    if show_avg is True:
+        avg_C = np.average(C)
+        plt.plot([xmin,xmax],[avg_C,avg_C])
+    #plt.line(line)
+    plt.ylabel('$cc$')
         
     #wlabel = {None: 'degree', 'weight':'weight'}
-    if nbunch is not None:
-        nlabel = '_adj'
-    else:
-        nlabel = '_unadj'
-    if filename.find('dom') <> -1:
-        nlabel = ''
-    ax.set_xlabel('degree')
-    ax.set_title(dirdict[directed] + ' cluster vs degree')
-    plt.savefig(dirdict[directed] + 'cluster_vs_degree' + '_' + filename+nlabel+'.' + format, format = format)
-    plt.close()
+    plt.xlabel('$k$')
+    #plt.title(dirdict[directed] + ' cluster vs degree')
+    #plt.savefig(dirdict[directed] + 'cluster_vs_degree' + '_' + 
+    #filename+ '.' + format, format = format)
+    
 
 
 def dir_clustering_coefficient(G, weight = None, nbunch = None):
