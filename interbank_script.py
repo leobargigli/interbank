@@ -154,9 +154,9 @@ def main():
     
     for i in distG:
 #        
-        x = distG[i]
-        distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '_subgraph.distr'
-        np.savetxt(distfile, x, fmt = fmts[i])
+        #x = distG[i]
+        #distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '_subgraph.distr'
+        #np.savetxt(distfile, x, fmt = fmts[i])
         
         if i <>'net cells' and i <> 'gross cells':
             knnk = k_vs_nnk(G, i, nbunch = nodelist)
