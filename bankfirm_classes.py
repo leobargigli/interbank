@@ -12,15 +12,29 @@ from comm_detect_funcs import *
 
 class Year():#IB.Year):
 
-    def __init__(self, filename, delimiter = '\t', dtype = int, divide_factor = 1E0):
+    def __init__(self, filename, 
+                 delimiter = '\t', 
+                 dtype = int, 
+                 divide_factor = 1E0,weighted = False):
 
-        edgelist = np.loadtxt(filename,delimiter,dtype)
-        empty_rows = np.where(edgelist[:, 2] == 0)[0]
-        edgelist = np.delete(edgelist,empty_rows,0)
-        edgelist[:,2] = map(lambda x : np.ceil(x / divide_factor), edgelist[:,2])
+        edgelist = np.loadtxt(filename,
+                              delimiter = delimiter,
+                              dtype = dtype)
+        if weighted:
+            empty_rows = np.where(edgelist[:, 2] == 0)[0]
+            edgelist = np.delete(edgelist,empty_rows,0)
             
-        edgelist = [('F'+str(i[0]),'B'+str(i[1]), i[2]) for i in edgelist]
-        self.edgetype = np.dtype([('source','|S10'),('dest','S10'),('weight',np.float64)])
+            edgelist[:,2] = map(lambda x : np.ceil(x / divide_factor), edgelist[:,2])
+            edgelist = [('F'+str(i[0]),'B'+str(i[1]), i[2]) for i in edgelist]
+            self.edgetype = np.dtype([('source','|S10'),
+                                      ('dest','S10'),
+                                    ('weight',np.float64)])
+        else:
+            self.edgetype = np.dtype([('source',edgelist.dtype),
+                                      ('dest',edgelist.dtype)])            
+            edgelist = [('F'+str(i[0]),'B'+ str(i[1])) for i in edgelist]
+            
+        
         edgelist = np.array(edgelist, dtype = self.edgetype)
         self.edgelist = edgelist.copy()
         self.firms = np.unique(edgelist['source'])
@@ -30,11 +44,16 @@ class Year():#IB.Year):
         G = nx.DiGraph()
         G.add_nodes_from(self.firms)
         G.add_nodes_from(self.banks)
-        G.add_weighted_edges_from(edgelist)
+        if weighted:
+            G.add_weighted_edges_from(edgelist)
+        else:
+            G.add_edges_from(edgelist)
         self.Net = G
         
-        row_indices = dict(zip(self.firms, range(len(self.firms))))
-        col_indices = dict(zip(self.banks, range(len(self.banks))))
+        row_indices = dict(zip(self.firms, 
+                               range(len(self.firms))))
+        col_indices = dict(zip(self.banks, 
+                               range(len(self.banks))))
         n_edges = len(edgelist)
 
         ij = np.zeros((2, n_edges))
@@ -44,7 +63,10 @@ class Year():#IB.Year):
             ij[0, i] = row_indices[source]
             ij[1, i] = col_indices[dest]
 
-        data = edgelist['weight']
+        try:
+            data = edgelist['weight']
+        except ValueError:
+            data = np.ones((n_edges,))
         A = csc_matrix((data,ij))
         self.Adj = A
         self.descr = 'original network'
@@ -53,6 +75,33 @@ class Year():#IB.Year):
         G = self.Adj
         outfile = open(self.filename.split('.')[0] + 'Graph.pkl','wb')
         dump(G,outfile)
+    
+    def project(self,bset = 'B',selfloops = False):
+        
+        W = self.Adj
+        n,m = W.shape
+        if bset == 'B':
+            r = len(self.banks)
+            labels = self.banks
+        else:
+            r = len(self.firms)
+            labels = self.firms
+        
+        if r == n:
+            W = W * W.T
+        else:
+            W = W.T * W
+        
+        G = nx.from_scipy_sparse_matrix(W)
+        labels = dict(zip(range(r),labels))
+        G = nx.relabel_nodes(G,labels)
+        if not selfloops:
+            G.remove_edges_from(G.selfloop_edges())
+        
+        return G
+            
+        
+        
 
 class SVnet(Year):#,IB.SVnet):
     

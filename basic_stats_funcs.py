@@ -341,34 +341,7 @@ def exp_part_ratio(G,direction, nbunch = None, quant = 50, degree = True):
 
     return part_dict
         
-
-def scatter_pylab(x,y,  
-                    format = None, show_avg = False, **kwargs):
-#    if directed is False:
-#        C, degree = clustering_coefficient(G, nbunch = nbunch)
-#    else: 
-#        C, degree = dir_clustering_coefficient(G, nbunch = nbunch)
-    
-    #dirdict  = {True: 'directed', False: ''}
-    
-    #fig = plt.figure()
-    #ax = fig.add_subplot(111)
-    plt.scatter(x, y, **kwargs)
-    xmin, xmax = plt.xlim()
-    if show_avg is True:
-        avg_C = np.average(C)
-        plt.plot([xmin,xmax],[avg_C,avg_C])
-    #plt.line(line)
-    plt.ylabel('$cc$')
-        
-    #wlabel = {None: 'degree', 'weight':'weight'}
-    plt.xlabel('$k$')
-    #plt.title(dirdict[directed] + ' cluster vs degree')
-    #plt.savefig(dirdict[directed] + 'cluster_vs_degree' + '_' + 
-    #filename+ '.' + format, format = format)
-    
-
-
+  
 def dir_clustering_coefficient(G, weight = None, nbunch = None):
     
     G = G.copy()    
@@ -474,3 +447,84 @@ def assortativity(G, x='out', y='out', nbunch = None, weighted = False):
     return rho, p
     
      
+def core_vector(A,tiering = False, 
+                selfloops = False, directed = False):
+    
+    outk = A.sum(1)
+    ink = A.sum(0)
+    deg = outk + ink
+    n = len(deg)
+    indices = np.argsort(deg)[::-1]
+    Z = np.array(range(1,n + 1)) - 0.5 * (1 + deg[indices])
+    core = indices[Z < 0]
+    core_v = np.zeros((n,))
+    core_v[core] = 1
+    c = core_v.sum()
+    if tiering:
+        indices = np.argsort(core_v)[::-1]
+        M = A[indices][:,indices] # this is the sorted adjacency matrix
+        CC = M[:c,:c]
+        PP = M[c:,c:]
+        if selfloops:
+            Z = c**2 - CC.sum() + PP.sum()
+        else:
+            Z = c*(c-1) - CC.sum() + PP.sum()
+        out_indices = np.where(outk <= c)
+        out_indices = np.intersect1d(out_indices[0],core)
+        tier_v = core_v.copy()
+        #print out_indices
+
+        for i in out_indices:
+            h = np.where(indices == i)[0]
+         #   print h
+            if M[h,c:].sum() == 0:
+
+                M = np.insert(M,[c],M[h],0) # put the h^th node in the c^th row
+                M = np.delete(M,h,0)
+                M = np.insert(M,[c],M[:,h],1)# put the h^th node in the c^th col
+                M = np.delete(M,h,1)
+
+                if selfloops:
+                    Znew = (c-1)**2 - M[:c-1,:c-1].sum() + M[c-1:,c-1:].sum()
+                else:
+                    Znew = (c-1)*(c-2) - M[:c-1,:c-1].sum() + M[c-1:,c-1:].sum()
+               
+          #      print Znew
+                dZ = c - n + Znew - Z
+                if Znew < Z:
+                    return 'something wrong'
+           #     print dZ
+                if dZ < 0:
+                    tier_v[i] = 0
+                    c -= 1 
+                    Z = Znew
+            
+        in_indices = np.where(ink <= c)
+        in_indices = np.intersect1d(in_indices[0],core)
+            
+        for i in in_indices:
+            h = np.where(indices == i)[0]
+            if M[c:,h].sum() == 0:
+                
+                M = np.insert(M,[c],M[h],0)
+                M = np.delete(M,h,0)
+                M = np.insert(M,[c],M[:,h],1)
+                M = np.delete(M,h,1)
+                #return M,c
+                
+                if selfloops:
+                    Znew = (c-1)**2 - M[:c-1,:c-1].sum() + M[c-1:,c-1:].sum()
+                else:
+                    Znew = (c-1)*(c-2) - M[:c-1,:c-1].sum() + M[c-1:,c-1:].sum()
+                
+                dZ = c - n + Znew - Z
+                if Znew < Z:
+                    return 'something wrong'
+                if dZ < 0:
+                    tier_v[i] = 0
+                    c -= 1 
+                    Z = Znew
+        
+        return core_v,tier_v,pearsonr(core_v,tier_v)
+    else:
+        return core_v

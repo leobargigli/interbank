@@ -102,31 +102,37 @@ def main():
     # this section is to build the distributions for the estimation of null models
     
     G = G.subgraph(nodelist)
-    selfloops = G.selfloop_edges(data = True)
-    G.remove_edges_from(selfloops)
+    A = 1. * (np.array(nx.to_numpy_matrix(G)) > 0)
+    core,tier,t = core_vector(A,True,True,True)
+    filename = Y.filename + label + opts.rapporto + opts.maturity + '.corevector'
+    np.savetxt(filename,core,fmt = '%.1i')
+    filename = Y.filename + label + opts.rapporto + opts.maturity + '.tiervector'
+    np.savetxt(filename,tier,fmt = '%.1i')
+    #selfloops = G.selfloop_edges(data = True)
+    #G.remove_edges_from(selfloops)
     
-    try:
-        out_degree = G.out_degree()
-        in_degree = G.in_degree()
-        net_out_weight = G.out_degree(weighted = True)
-        net_in_weight = G.in_degree(weighted = True)
-
-    except TypeError:
-        out_degree = G.out_degree()
-        in_degree = G.in_degree()
-        net_out_weight = G.out_degree(weight = 'weight')
-        net_in_weight = G.in_degree(weight = 'weight')
-
-    distG = {
-    'out-degree': 
-    np.array([out_degree[i] for i in nodelist],dtype = np.float32), 
-    'in-degree': 
-    np.array([in_degree[i] for i in nodelist],dtype = np.float32), 
-    'net_out-weight': 
-    np.array([net_out_weight[i] for i in nodelist],dtype = np.float32), 
-    'net_in-weight': 
-    np.array([net_in_weight[i] for i in nodelist],dtype = np.float32)  
-    }
+#    try:
+#        out_degree = G.out_degree()
+#        in_degree = G.in_degree()
+#        net_out_weight = G.out_degree(weighted = True)
+#        net_in_weight = G.in_degree(weighted = True)
+#
+#    except TypeError:
+#        out_degree = G.out_degree()
+#        in_degree = G.in_degree()
+#        net_out_weight = G.out_degree(weight = 'weight')
+#        net_in_weight = G.in_degree(weight = 'weight')
+#
+#    distG = {
+#    'out-degree': 
+#    np.array([(i,out_degree[i]) for i in nodelist],dtype = np.float32), 
+#    'in-degree': 
+#    np.array([(i,in_degree[i]) for i in nodelist],dtype = np.float32), 
+#    'net_out-weight': 
+#    np.array([(i,net_out_weight[i]) for i in nodelist],dtype = np.float32), 
+#    'net_in-weight': 
+#    np.array([(i,net_in_weight[i]) for i in nodelist],dtype = np.float32)  
+#    }
 
     
     # end of section
@@ -151,22 +157,29 @@ def main():
     
   #  output = open(filename, 'a')
   #  output.write('\n')    
-    
-    for i in distG:
-#        
-        #x = distG[i]
-        #distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '_subgraph.distr'
-        #np.savetxt(distfile, x, fmt = fmts[i])
+
+#    try:
+#        os.chdir('DISTR')
+#    except OSError:
+#        os.mkdir('DISTR')
+#        os.chdir('DISTR')
+#    
+#    
+#    for i in distG:
+##        
+#        x = distG[i]
+#        distfile = Y.filename + '_' + i + label + opts.rapporto + opts.maturity + '_subgraph.distr'
+#        np.savetxt(distfile, x, fmt = fmts[i])
+#    
+#    os.chdir('..')
         
-        if i <>'net cells' and i <> 'gross cells':
-            knnk = k_vs_nnk(G, i, nbunch = nodelist)
-            knnk = knnk.items()
-            knnk = np.array(knnk)
-            k = knnk[:, 0]
-            nnk = knnk[:, 1]
-            #labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
-            #scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
-            np.savetxt(Y.filename  + label + opts.rapporto + opts.maturity + i  +'.knnk',np.array(zip(k,nnk)))
+#        if i <>'net cells' and i <> 'gross cells':
+#            knnk = k_vs_nnk(G, i, nbunch = nodelist)
+#            knnk = knnk.items()
+#            knnk = np.array(knnk)
+#            #labels = [r'$k$',r'$k_{nn}$','Average_neighbor_%s_vs_node_%s'%(i, i)]
+#            #scatter(k, nnk, labels, opts.rapporto + opts.maturity + Y.filename + label,fmt = img)
+#            np.savetxt(Y.filename  + label + opts.rapporto + opts.maturity + i  +'.knnk',knnk)
 
             
 
