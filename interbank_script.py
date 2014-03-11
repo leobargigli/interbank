@@ -109,12 +109,15 @@ def main():
     output = open(filename,'wb')
     core = np.array(core,dtype = str).tolist()
     core = [i[0] + ' , ' + i[1] + '\n' for i in core]
-    print core
     output.writelines(core)
     output.flush()
     #np.savetxt(filename,core,fmt = ['%1s','%.1i'])
     filename = Y.filename + label + opts.rapporto + opts.maturity + '.tiervector'
-    np.savetxt(filename,tier,fmt = ('%1s','%.1i'))
+    output = open(filename,'wb')
+    tier = np.array(tier,dtype = str).tolist()
+    tier = [i[0] + ' , ' + i[1] + '\n' for i in tier]
+    output.writelines(tier)
+    output.flush()
     #selfloops = G.selfloop_edges(data = True)
     #G.remove_edges_from(selfloops)
     
