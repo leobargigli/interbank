@@ -102,12 +102,19 @@ def main():
     # this section is to build the distributions for the estimation of null models
     
     G = G.subgraph(nodelist)
-    A = 1. * (np.array(nx.to_numpy_matrix(G)) > 0)
-    core,tier,t = core_vector(A,True,True,True)
+    A = 1. * (np.array(nx.to_numpy_matrix(G,nodelist = nodelist)) > 0)
+    core,tier,t = core_vector(A,directed = True,selfloops = True,
+                              tiering = True, nodelist = nodelist)
     filename = Y.filename + label + opts.rapporto + opts.maturity + '.corevector'
-    np.savetxt(filename,core,fmt = '%.1i')
+    output = open(filename,'wb')
+    core = np.array(core,dtype = str).tolist()
+    core = [i[0] + ' , ' + i[1] + '\n' for i in core]
+    print core
+    output.writelines(core)
+    output.flush()
+    #np.savetxt(filename,core,fmt = ['%1s','%.1i'])
     filename = Y.filename + label + opts.rapporto + opts.maturity + '.tiervector'
-    np.savetxt(filename,tier,fmt = '%.1i')
+    np.savetxt(filename,tier,fmt = ('%1s','%.1i'))
     #selfloops = G.selfloop_edges(data = True)
     #G.remove_edges_from(selfloops)
     

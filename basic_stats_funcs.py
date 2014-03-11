@@ -448,7 +448,8 @@ def assortativity(G, x='out', y='out', nbunch = None, weighted = False):
     
      
 def core_vector(A,tiering = False, 
-                selfloops = False, directed = False):
+                selfloops = False, directed = False, 
+                nodelist = None):
     
     outk = A.sum(1)
     ink = A.sum(0)
@@ -525,6 +526,15 @@ def core_vector(A,tiering = False,
                     c -= 1 
                     Z = Znew
         
-        return core_v,tier_v,pearsonr(core_v,tier_v)
+        if nodelist is None:
+            
+            return core_v,tier_v,pearsonr(core_v,tier_v)
+       
+        else:
+            return zip(nodelist,core_v),zip(nodelist,tier_v),pearsonr(core_v,tier_v)
     else:
-        return core_v
+        if nodelist is None:
+            
+            return core_v
+        else:
+            return zip(nodelist,core_v)
